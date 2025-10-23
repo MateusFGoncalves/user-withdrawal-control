@@ -1,6 +1,6 @@
 # User Withdrawal Control
 
-Sistema web completo de controle de usuários desenvolvido com arquitetura de microsserviços, utilizando PHP Hyperf 3 no backend e React com shadcn/ui no frontend.
+Sistema web completo de controle financeiro com arquitetura de microsserviços, desenvolvido para gerenciar contas digitais, depósitos e saques via PIX. Utiliza PHP Hyperf 3 no backend e React com shadcn/ui no frontend.
 
 ## 🏗️ Arquitetura
 
@@ -38,18 +38,34 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 
 ## 📋 Funcionalidades
 
-### Módulo de Autenticação
-- ✅ Cadastro de usuários
+### 🔐 Módulo de Autenticação
+- ✅ Cadastro de usuários com tipos (CLIENTE/MASTER)
 - ✅ Login com JWT
 - ✅ Validação de tokens
 - ✅ Proteção de rotas
 
-### Interface do Usuário
+### 👤 Perfil CLIENTE
+- ✅ **Dashboard e Saldo**: Visualização do valor atual disponível na conta
+- ✅ **Módulo de Depósito**: Adicionar fundos à conta (crédito imediato)
+- ✅ **Módulo de Saque**:
+  - Saque Imediato: Débito instantâneo + validação de saldo
+  - Saque Agendado: Agendamento até 7 dias (não debita no momento)
+- ✅ **Extrato**: Histórico completo de transações com filtros
+- ✅ **Suporte PIX**: Saques via chave PIX (EMAIL, PHONE, CPF, RANDOM)
+
+### 👑 Perfil MASTER (Em desenvolvimento)
+- 🔄 Gestão de Clientes
+- 🔄 Gestão de Contas
+- 🔄 Histórico Global de Transações
+- 🔄 Total de Fundos do Banco
+
+### 🎨 Interface do Usuário
 - ✅ Página de login responsiva
 - ✅ Página de cadastro com validação
 - ✅ Dashboard com sidebar e navbar
 - ✅ Design system consistente com shadcn/ui
 - ✅ Interface moderna e acessível
+- ✅ Modo escuro/claro
 
 ## 🛠️ Instalação e Configuração
 
@@ -93,6 +109,151 @@ docker-compose up -d
 - **MySQL**: localhost:3306
 - **Redis**: localhost:6379
 
+## 📊 Modelos de Dados
+
+### 🏦 Estrutura do Banco de Dados
+
+#### **users** - Usuários do Sistema
+- `id` - Identificador único
+- `name` - Nome completo
+- `email` - Email único
+- `password` - Senha hashada
+- `user_type` - Tipo de acesso (CLIENTE/MASTER)
+- `created_at` / `updated_at` - Timestamps
+
+#### **accounts** - Contas Digitais
+- `id` - Identificador único
+- `user_id` - Referência ao usuário
+- `balance` - Saldo monetário (decimal 15,2)
+- `created_at` / `updated_at` - Timestamps
+
+#### **transactions** - Histórico de Transações
+- `id` - Identificador único
+- `user_id` - Referência ao usuário
+- `account_id` - Referência à conta
+- `type` - Tipo (DEPOSITO/SAQUE)
+- `amount` - Valor da transação
+- `status` - Status (PENDENTE/PROCESSADO/FALHOU)
+- `scheduled_at` - Data de agendamento (saques)
+- `processed_at` - Data de processamento
+- `failure_reason` - Motivo da falha
+- `created_at` / `updated_at` - Timestamps
+
+#### **withdrawal_details** - Detalhes de Saque PIX
+- `id` - Identificador único
+- `transaction_id` - Referência à transação
+- `pix_type` - Tipo PIX (EMAIL/PHONE/CPF/RANDOM)
+- `pix_key` - Chave PIX
+- `created_at` / `updated_at` - Timestamps
+
+## 🔌 API Endpoints
+
+### 🔐 Autenticação
+```http
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+```
+
+### 💰 Conta (Protegido)
+```http
+GET /api/account/balance     # Consultar saldo
+GET /api/account/info        # Informações da conta
+```
+
+### 💸 Transações (Protegido)
+```http
+POST /api/transactions/deposit    # Realizar depósito
+POST /api/transactions/withdraw   # Realizar saque
+GET  /api/transactions/statement  # Consultar extrato
+```
+
+### 📝 Exemplos de Uso
+
+#### **Login**
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "cliente@exemplo.com", "password": "123456"}'
+```
+
+#### **Consultar Saldo**
+```bash
+curl -X GET http://localhost:8080/api/account/balance \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Realizar Depósito**
+```bash
+curl -X POST http://localhost:8080/api/transactions/deposit \
+  -H "Authorization: Bearer [TOKEN]" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 500.00}'
+```
+
+#### **Realizar Saque Imediato**
+```bash
+curl -X POST http://localhost:8080/api/transactions/withdraw \
+  -H "Authorization: Bearer [TOKEN]" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 200.00, "pix_type": "EMAIL", "pix_key": "teste@exemplo.com"}'
+```
+
+#### **Realizar Saque Agendado**
+```bash
+curl -X POST http://localhost:8080/api/transactions/withdraw \
+  -H "Authorization: Bearer [TOKEN]" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 100.00, "pix_type": "EMAIL", "pix_key": "teste@exemplo.com", "scheduled_at": "2025-10-25 10:00:00"}'
+```
+
+#### **Consultar Extrato**
+```bash
+curl -X GET http://localhost:8080/api/transactions/statement \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+## 📋 Regras de Negócio
+
+### 💰 Operações Financeiras
+
+#### **Depósitos**
+- ✅ Valor deve ser maior que zero
+- ✅ Crédito imediato na conta
+- ✅ Transação marcada como PROCESSADO
+- ✅ Atualização automática do saldo
+
+#### **Saques Imediatos**
+- ✅ Valor deve ser maior que zero
+- ✅ Validação de saldo suficiente
+- ✅ Débito imediato na conta
+- ✅ Transação marcada como PROCESSADO
+- ✅ Detalhes PIX obrigatórios
+
+#### **Saques Agendados**
+- ✅ Data de agendamento deve ser futura
+- ✅ Limite máximo de 7 dias
+- ✅ Valor NÃO é debitado no agendamento
+- ✅ Transação marcada como PENDENTE
+- ✅ Processamento via CRON (futuro)
+
+#### **Validações Gerais**
+- ✅ Saldo nunca pode ser negativo
+- ✅ Validação de saldo no momento do saque
+- ✅ Chave PIX obrigatória para saques
+- ✅ Formatação monetária brasileira (R$ 1.000,00)
+
+### 🔐 Segurança
+- ✅ Autenticação JWT obrigatória
+- ✅ Tokens com expiração (1 hora)
+- ✅ Validação de permissões por perfil
+- ✅ Senhas hashadas com bcrypt
+- ✅ Validação de entrada em todas as rotas
+
+### 📊 Dados de Teste
+- **Cliente**: `cliente@exemplo.com` / `123456` (Saldo: R$ 1.000,00)
+- **Master**: `master@exemplo.com` / `123456`
+
 ### 🔧 Comandos de Migrations e Seeders
 
 #### Migrations
@@ -126,27 +287,85 @@ user-withdrawal-control/
 ├── backend/                 # API PHP Hyperf 3
 │   ├── app/
 │   │   ├── Controller/      # Controladores da API
+│   │   │   ├── AuthController.php      # Autenticação
+│   │   │   ├── AccountController.php   # Operações de conta
+│   │   │   ├── TransactionController.php # Depósitos e saques
+│   │   │   └── DashboardController.php # Dashboard
 │   │   └── Model/          # Modelos de dados
+│   │       ├── User.php                # Usuários
+│   │       ├── Account.php             # Contas digitais
+│   │       ├── Transaction.php         # Transações
+│   │       └── WithdrawalDetails.php   # Detalhes PIX
 │   ├── config/             # Configurações do Hyperf
+│   │   ├── autoload/
+│   │   │   ├── databases.php          # Configuração MySQL
+│   │   │   ├── redis.php              # Configuração Redis
+│   │   │   └── jwt.php                # Configuração JWT
+│   │   └── routes.php                 # Rotas da API
 │   ├── migrations/         # Migrations do banco de dados
+│   │   ├── create_users_table.php
+│   │   ├── add_user_type_to_users_table.php
+│   │   ├── create_accounts_table.php
+│   │   ├── create_transactions_table.php
+│   │   └── create_withdrawal_details_table.php
 │   ├── seeders/            # Seeders para dados iniciais
+│   │   └── user_seeder.php            # Usuários de teste
 │   ├── Dockerfile
 │   └── composer.json
 ├── frontend/               # Interface React
 │   ├── src/
 │   │   ├── components/     # Componentes reutilizáveis
 │   │   │   ├── ui/         # Componentes shadcn/ui
-│   │   │   └── layout/     # Componentes de layout
+│   │   │   ├── layout/     # Componentes de layout
+│   │   │   ├── theme-provider.tsx     # Provedor de tema
+│   │   │   └── theme-toggle.tsx       # Toggle dark/light
 │   │   ├── pages/          # Páginas da aplicação
-│   │   └── lib/            # Utilitários
+│   │   │   ├── Login.tsx              # Página de login
+│   │   │   ├── Register.tsx           # Página de cadastro
+│   │   │   └── Dashboard.tsx          # Dashboard principal
+│   │   ├── lib/            # Utilitários
+│   │   │   └── utils.ts               # Funções utilitárias
+│   │   ├── utils/          # Utilitários específicos
+│   │   │   └── api.ts                 # Configuração da API
+│   │   └── App.tsx         # Componente principal
 │   ├── public/
 │   ├── Dockerfile
 │   └── package.json
 ├── nginx/                  # Configuração do Nginx
 │   └── nginx.conf
 ├── docker-compose.yml      # Orquestração dos serviços
+├── setup.sh               # Script de configuração automática
 └── README.md
 ```
+
+## 🚀 Status do Projeto
+
+### ✅ Implementado (Perfil CLIENTE)
+- **Autenticação completa** com JWT
+- **Sistema de contas digitais** com saldo
+- **Depósitos imediatos** com validação
+- **Saques imediatos** com validação de saldo
+- **Saques agendados** (até 7 dias)
+- **Extrato completo** com filtros
+- **Suporte PIX** (EMAIL, PHONE, CPF, RANDOM)
+- **Interface moderna** com shadcn/ui
+- **Modo escuro/claro**
+- **Migrations e seeders** automatizados
+- **API REST completa** documentada
+
+### 🔄 Em Desenvolvimento (Perfil MASTER)
+- Gestão de clientes
+- Gestão de contas
+- Histórico global de transações
+- Total de fundos do banco
+- Dashboard administrativo
+
+### 📋 Próximas Funcionalidades
+- **CRON Job** para processar saques agendados
+- **Notificações por email** para confirmações
+- **Relatórios financeiros** detalhados
+- **Auditoria** de operações
+- **API de webhooks** para integrações
 
 ## 🔧 Desenvolvimento
 
@@ -204,19 +423,73 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    user_type ENUM('CLIENTE', 'MASTER') DEFAULT 'CLIENTE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
-## 🌐 API Endpoints
+### Tabela `accounts`
+```sql
+CREATE TABLE accounts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    balance DECIMAL(15,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
 
-### Autenticação
+### Tabela `transactions`
+```sql
+CREATE TABLE transactions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    account_id BIGINT UNSIGNED NOT NULL,
+    type ENUM('DEPOSITO', 'SAQUE') NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    status ENUM('PENDENTE', 'PROCESSADO', 'FALHOU') DEFAULT 'PENDENTE',
+    scheduled_at TIMESTAMP NULL,
+    processed_at TIMESTAMP NULL,
+    failure_reason TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+```
+
+### Tabela `withdrawal_details`
+```sql
+CREATE TABLE withdrawal_details (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    transaction_id BIGINT UNSIGNED NOT NULL,
+    pix_type ENUM('EMAIL', 'PHONE', 'CPF', 'RANDOM') NOT NULL,
+    pix_key VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE
+);
+```
+
+## 🌐 API Endpoints (Atualizados)
+
+### 🔐 Autenticação
 - `POST /api/auth/register` - Cadastro de usuário
 - `POST /api/auth/login` - Login de usuário
-- `POST /api/auth/me` - Informações do usuário autenticado
+- `GET /api/auth/me` - Informações do usuário autenticado
 
-### Dashboard
+### 💰 Conta (Protegido)
+- `GET /api/account/balance` - Consultar saldo da conta
+- `GET /api/account/info` - Informações completas da conta
+
+### 💸 Transações (Protegido)
+- `POST /api/transactions/deposit` - Realizar depósito
+- `POST /api/transactions/withdraw` - Realizar saque (imediato/agendado)
+- `GET /api/transactions/statement` - Consultar extrato
+
+### 📊 Dashboard
 - `GET /api/dashboard` - Dados do dashboard
 
 ## 🎨 Design System
@@ -259,6 +532,29 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 ## 🆘 Suporte
 
 Para suporte, abra uma issue no repositório ou entre em contato através do email.
+
+---
+
+## 🎯 Resumo do Projeto
+
+**User Withdrawal Control** é um sistema financeiro completo que permite:
+
+- ✅ **Gerenciamento de contas digitais** com saldo em tempo real
+- ✅ **Depósitos e saques** via PIX com validações robustas
+- ✅ **Saques agendados** para até 7 dias no futuro
+- ✅ **Extrato completo** com histórico de transações
+- ✅ **Interface moderna** com modo escuro/claro
+- ✅ **API REST** completa e documentada
+- ✅ **Arquitetura de microsserviços** containerizada
+- ✅ **Migrations e seeders** automatizados
+
+### 🚀 Tecnologias Utilizadas
+
+- **Backend**: PHP Hyperf 3 + MySQL + Redis + JWT
+- **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS
+- **Infraestrutura**: Docker + Docker Compose + Nginx
+- **Banco de Dados**: 4 tabelas com relacionamentos completos
+- **API**: 8 endpoints implementados e testados
 
 ---
 

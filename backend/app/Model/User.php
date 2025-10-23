@@ -14,6 +14,7 @@ class User extends Model
         'name',
         'email',
         'password',
+        'user_type',
     ];
 
     protected array $casts = [
@@ -34,5 +35,15 @@ class User extends Model
     public function verifyPassword(string $password): bool
     {
         return password_verify($password, $this->password);
+    }
+
+    public function account()
+    {
+        return $this->hasOne(Account::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 }
