@@ -13,7 +13,7 @@ import toast from 'react-hot-toast';
 import { ArrowDownLeft, CreditCard, Clock, DollarSign } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-import { useMoneyMask } from '../hooks/useMoneyMask';
+import { formatCurrency, parseCurrency } from '../helpers/currency';
 
 interface AccountData {
   balance: number;
@@ -38,10 +38,7 @@ const WithdrawPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [accountData, setAccountData] = useState<AccountData | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(true);
-  
-  const amountInputRef = useMoneyMask(formData.amount, (value) => 
-    setFormData(prev => ({ ...prev, amount: value }))
-  );
+
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -85,11 +82,10 @@ const WithdrawPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Remover formatação do vanilla-masker: "R$ 55,00" -> "55,00" -> "55.00" -> 55.00
-    const cleanAmount = formData.amount.replace(/[^\d,]/g, ''); // Remove tudo exceto dígitos e vírgula
-    const withdrawAmount = parseFloat(cleanAmount.replace(',', '.')); // Substitui vírgula por ponto
-    
-    if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+    const withdrawAmount = formData.amount
+    const withdrawAmountFloat = parseFloat(withdrawAmount);
+     
+    if (isNaN(withdrawAmountFloat) || withdrawAmountFloat <= 0) {
       toast.error('Por favor, insira um valor válido maior que zero');
       setIsLoading(false);
       return;
@@ -281,13 +277,18 @@ const WithdrawPage: React.FC = () => {
                                 R$
                               </InputGroupPrefix>
                               <InputGroupInput
-                                ref={amountInputRef}
                                 id="amount"
                                 type="text"
                                 placeholder="0,00"
                                 className="text-lg"
                                 required
-                              />
+                                value={formData.amount ? formatCurrency((parseFloat(formData.amount) || 0) * 100) : ''}
+                                onChange={(e) => {
+                                  const numericValue = Number(parseCurrency(e.target.value)) / 100;
+
+                                  setFormData(prev => ({ ...prev, amount: numericValue.toString() }));
+                              }}
+                             />
                             </InputGroup>
                           </div>
 

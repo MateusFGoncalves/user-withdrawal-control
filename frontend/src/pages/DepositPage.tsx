@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { ArrowUpRight, DollarSign, Clock } from 'lucide-react';
 import { apiClient } from '../utils/apiClient';
 import { useAuth } from '../hooks/useAuth';
-import { useMoneyMask } from '../hooks/useMoneyMask';
+import { formatCurrency, parseCurrency } from '../helpers/currency';
 
 interface AccountData {
   balance: number;
@@ -30,8 +30,6 @@ const DepositPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [accountData, setAccountData] = useState<AccountData | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(true);
-  
-  const amountInputRef = useMoneyMask(amount, setAmount);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -69,11 +67,10 @@ const DepositPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Remover formatação do vanilla-masker: "R$ 55,00" -> "55,00" -> "55.00" -> 55.00
-    const cleanAmount = amount.replace(/[^\d,]/g, ''); // Remove tudo exceto dígitos e vírgula
-    const depositAmount = parseFloat(cleanAmount.replace(',', '.')); // Substitui vírgula por ponto
-    
-    if (isNaN(depositAmount) || depositAmount <= 0) {
+    const depositAmount = amount
+    const depositAmountFloat = parseFloat(depositAmount);
+
+    if (isNaN(depositAmountFloat) || depositAmountFloat <= 0) {
       toast.error('Por favor, insira um valor válido maior que zero');
       setIsLoading(false);
       return;
@@ -203,12 +200,17 @@ const DepositPage: React.FC = () => {
                               R$
                             </InputGroupPrefix>
                             <InputGroupInput
-                              ref={amountInputRef}
                               id="amount"
                               type="text"
                               placeholder="0,00"
                               className="text-lg"
                               required
+                              value={amount ? formatCurrency((parseFloat(amount) || 0) * 100) : ''}
+                              onChange={(e) => {
+                                const numericValue = Number(parseCurrency(e.target.value)) / 100;
+
+                                setAmount(numericValue.toString());
+                              }}
                             />
                           </InputGroup>
                           <p className="text-sm text-muted-foreground">
