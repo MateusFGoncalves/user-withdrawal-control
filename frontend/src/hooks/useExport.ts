@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '../utils/api';
 
 interface Transaction {
   id: number;
@@ -30,7 +31,7 @@ export const useExport = () => {
       if (filters.type !== 'all') params.append('type', filters.type);
       if (filters.status !== 'all') params.append('status', filters.status);
 
-      const url = `http://localhost:8080/api/client/transactions/export-excel${params.toString() ? '?' + params.toString() : ''}`;
+      const url = getApiUrl(`/client/transactions/export-excel${params.toString() ? '?' + params.toString() : ''}`);
 
       // Usar XMLHttpRequest para melhor controle
       const xhr = new XMLHttpRequest();
