@@ -102,7 +102,7 @@ class TransactionController extends AbstractController
             }
 
             // Parâmetros
-            $limit = (int) $request->input('limit', 5);
+            $limit = (int) $request->input('limit', 4);
             $days = (int) $request->input('days', 30); // Últimos 30 dias por padrão
 
             // Calcular data limite
