@@ -4,25 +4,20 @@ declare(strict_types=1);
 
 namespace App\Controller\Client;
 
+use App\Controller\AbstractController;
 use App\Model\Account;
 use App\Model\User;
 use App\Model\Transaction;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
-use Hyperf\Config\Annotation\Value;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 
-class AccountController
+class AccountController extends AbstractController
 {
-    #[Value('jwt.secret')]
-    private string $jwtSecret = 'your-super-secret-jwt-key-change-in-production';
-
     public function getBalance(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -54,7 +49,7 @@ class AccountController
     public function getAccountInfo(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -92,23 +87,6 @@ class AccountController
                 'success' => false,
                 'message' => 'Erro interno do servidor: ' . $e->getMessage(),
             ])->withStatus(500);
-        }
-    }
-
-    private function getUserFromToken(RequestInterface $request): ?User
-    {
-        try {
-            $token = $request->header('Authorization');
-            if (empty($token)) {
-                return null;
-            }
-
-            $token = str_replace('Bearer ', '', $token);
-            $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
-            
-            return User::with('account')->find($decoded->user_id);
-        } catch (\Exception $e) {
-            return null;
         }
     }
 }

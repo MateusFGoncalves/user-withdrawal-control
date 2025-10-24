@@ -28,10 +28,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
 
   const clientMenuItems = [
-    { icon: Home, label: 'Dashboard', href: '/dashboard' },
-    { icon: ArrowUpRight, label: 'Depósito', href: '/deposit' },
-    { icon: ArrowDownLeft, label: 'Saque', href: '/withdraw' },
-    { icon: History, label: 'Extrato', href: '/statement' },
+    { icon: Home, label: 'Dashboard', href: '/client/dashboard' },
+    { icon: ArrowUpRight, label: 'Depósito', href: '/client/deposit' },
+    { icon: ArrowDownLeft, label: 'Saque', href: '/client/withdraw' },
+    { icon: History, label: 'Extrato', href: '/client/statement' },
   ];
 
   const adminMenuItems = [

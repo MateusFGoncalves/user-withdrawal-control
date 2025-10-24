@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -13,6 +14,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   redirectTo = '/login'
 }) => {
   const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -26,12 +28,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!user) {
-    window.location.href = redirectTo;
+    navigate(redirectTo, { replace: true });
     return null;
   }
 
   if (!allowedUserTypes.includes(user.user_type)) {
-    window.location.href = redirectTo;
+    navigate(redirectTo, { replace: true });
     return null;
   }
 

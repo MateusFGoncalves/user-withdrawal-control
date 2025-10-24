@@ -48,11 +48,11 @@ const Login: React.FC = () => {
         
         // Redirecionar baseado no tipo de usuário
         if (data.data.user.user_type === 'CLIENTE') {
-          navigate('/dashboard');
+          navigate('/client/dashboard');
         } else if (data.data.user.user_type === 'MASTER') {
-          navigate('/admin');
+          navigate('/master/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/client/dashboard');
         }
       } else {
         setError(data.message || 'Erro ao fazer login');

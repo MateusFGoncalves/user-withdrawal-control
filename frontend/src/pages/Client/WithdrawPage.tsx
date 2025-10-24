@@ -147,7 +147,7 @@ const WithdrawPage: React.FC = () => {
 
         // Redirecionar após 3 segundos
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/client/dashboard');
         }, 3000);
       } else {
         toast.error(data.message || 'Erro ao realizar saque. Tente novamente.');

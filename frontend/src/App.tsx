@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ClientDashboard from './pages/Client/ClientDashboard';
+import Dashboard from './pages/Client/Dashboard';
 import DepositPage from './pages/Client/DepositPage';
 import WithdrawPage from './pages/Client/WithdrawPage';
 import StatementPage from './pages/Client/StatementPage';
@@ -38,15 +38,15 @@ function App() {
             
             {/* Rotas protegidas para clientes */}
             <Route 
-              path="/dashboard" 
+              path="/client/dashboard" 
               element={
                 <ProtectedRoute allowedUserTypes={['CLIENTE']}>
-                  <ClientDashboard />
+                  <Dashboard />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/deposit" 
+              path="/client/deposit" 
               element={
                 <ProtectedRoute allowedUserTypes={['CLIENTE']}>
                   <DepositPage />
@@ -54,7 +54,7 @@ function App() {
               } 
             />
             <Route 
-              path="/withdraw" 
+              path="/client/withdraw" 
               element={
                 <ProtectedRoute allowedUserTypes={['CLIENTE']}>
                   <WithdrawPage />
@@ -62,15 +62,13 @@ function App() {
               } 
             />
             <Route 
-              path="/statement" 
+              path="/client/statement" 
               element={
                 <ProtectedRoute allowedUserTypes={['CLIENTE']}>
                   <StatementPage />
                 </ProtectedRoute>
               } 
             />
-            
-            
             {/* Redirecionamento padrão */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>

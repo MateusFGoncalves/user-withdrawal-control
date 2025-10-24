@@ -2,18 +2,18 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const Dashboard: React.FC = () => {
+const DashboardRouter: React.FC = () => {
   const { user, isClient, isMaster } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Redirecionar baseado no tipo de usuário
     if (isClient) {
-      navigate('/dashboard');
+      navigate('/client/dashboard', { replace: true });
     } else if (isMaster) {
-      navigate('/admin');
+      navigate('/master/dashboard', { replace: true });
     } else {
-      navigate('/login');
+      navigate('/login', { replace: true });
     }
   }, [isClient, isMaster, navigate]);
 
@@ -27,4 +27,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardRouter;

@@ -46,6 +46,8 @@ export const useAuth = (): AuthContextType => {
             // Token inválido, limpar storage
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
           }
         } catch (error) {
           // Se for erro 401, o apiClient já fez o logout e redirecionamento
@@ -55,7 +57,13 @@ export const useAuth = (): AuthContextType => {
           // Em caso de erro, limpar storage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          setToken(null);
+          setUser(null);
         }
+      } else {
+        // Não há token armazenado, garantir que o estado está limpo
+        setToken(null);
+        setUser(null);
       }
       
       setIsLoading(false);

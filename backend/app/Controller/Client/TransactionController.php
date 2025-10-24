@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller\Client;
 
+use App\Controller\AbstractController;
 use App\Model\Account;
 use App\Model\Transaction;
 use App\Model\User;
 use App\Model\WithdrawalDetails;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
-use Hyperf\Config\Annotation\Value;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -20,15 +18,12 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 
-class TransactionController
+class TransactionController extends AbstractController
 {
-    #[Value('jwt.secret')]
-    private string $jwtSecret = 'your-super-secret-jwt-key-change-in-production';
-
     public function deposit(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -97,7 +92,7 @@ class TransactionController
     public function withdraw(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -227,7 +222,7 @@ class TransactionController
     public function getStatement(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -320,7 +315,7 @@ class TransactionController
     public function getRecentTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -385,7 +380,7 @@ class TransactionController
     public function cancelScheduledWithdrawal(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -453,7 +448,7 @@ class TransactionController
     public function exportExcel(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken($request);
+            $user = $this->getUserFromToken();
             if (!$user) {
                 return $response->json([
                     'success' => false,
@@ -622,22 +617,5 @@ class TransactionController
             'CANCELADO' => 'Cancelado'
         ];
         return $statuses[$status] ?? $status;
-    }
-
-    private function getUserFromToken(RequestInterface $request): ?User
-    {
-        try {
-            $token = $request->header('Authorization');
-            if (empty($token)) {
-                return null;
-            }
-
-            $token = str_replace('Bearer ', '', $token);
-            $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
-            
-            return User::with('account')->find($decoded->user_id);
-        } catch (\Exception $e) {
-            return null;
-        }
     }
 }

@@ -58,7 +58,7 @@ const Register: React.FC = () => {
 
       if (data.success) {
         localStorage.setItem('token', data.data.token);
-        navigate('/dashboard');
+        navigate('/client/dashboard');
       } else {
         setError(data.message || 'Erro ao criar conta');
       }

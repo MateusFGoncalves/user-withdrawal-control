@@ -43,7 +43,7 @@ interface Transaction {
 }
 
 
-const ClientDashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -222,7 +222,7 @@ const ClientDashboard: React.FC = () => {
 
               {/* Ações Rápidas */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/deposit')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/deposit')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <ArrowUpRight className="h-5 w-5 text-green-600" />
@@ -234,7 +234,7 @@ const ClientDashboard: React.FC = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/withdraw')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/withdraw')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <ArrowDownLeft className="h-5 w-5 text-orange-600" />
@@ -246,7 +246,7 @@ const ClientDashboard: React.FC = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/statement')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/statement')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <History className="h-5 w-5 text-blue-600" />
@@ -270,7 +270,7 @@ const ClientDashboard: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => navigate('/statement')}
+                      onClick={() => navigate('/client/statement')}
                     >
                       Ver todas
                     </Button>
@@ -342,4 +342,4 @@ const ClientDashboard: React.FC = () => {
   );
 };
 
-export default ClientDashboard;
+export default Dashboard;
