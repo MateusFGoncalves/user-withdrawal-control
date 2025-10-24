@@ -282,10 +282,10 @@ const WithdrawPage: React.FC = () => {
                                 placeholder="0,00"
                                 className="text-lg"
                                 required
-                                value={formData.amount ? formatCurrency((parseFloat(formData.amount) || 0) * 100) : ''}
+                                value={formData.amount ? formatCurrency(parseFloat(formData.amount || '0')) : ''}
                                 onChange={(e) => {
-                                  const numericValue = Number(parseCurrency(e.target.value)) / 100;
-
+                                  const numericValue = (Number(parseCurrency(e.target.value)) / 100).toFixed(2);
+                                  
                                   setFormData(prev => ({ ...prev, amount: numericValue.toString() }));
                               }}
                              />

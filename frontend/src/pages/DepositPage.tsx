@@ -205,9 +205,9 @@ const DepositPage: React.FC = () => {
                               placeholder="0,00"
                               className="text-lg"
                               required
-                              value={amount ? formatCurrency((parseFloat(amount) || 0) * 100) : ''}
+                              value={amount ? formatCurrency(parseFloat(amount || '0')) : ''}
                               onChange={(e) => {
-                                const numericValue = Number(parseCurrency(e.target.value)) / 100;
+                                const numericValue = (Number(parseCurrency(e.target.value)) / 100).toFixed(2);
 
                                 setAmount(numericValue.toString());
                               }}
