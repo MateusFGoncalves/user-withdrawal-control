@@ -12,7 +12,6 @@ import {
   ArrowDownLeft,
   History,
   Users,
-  CreditCard,
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -37,7 +36,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const masterMenuItems = [
     { icon: Home, label: 'Dashboard', href: '/master/dashboard' },
     { icon: Users, label: 'Clientes', href: '/master/clients' },
-    { icon: CreditCard, label: 'Contas', href: '/master/accounts' },
     { icon: BarChart3, label: 'Transações', href: '/master/transactions' },
   ];
 
