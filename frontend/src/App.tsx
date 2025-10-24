@@ -14,6 +14,7 @@ import ClientsPage from './pages/Master/ClientsPage';
 import ClientDetailPage from './pages/Master/ClientDetailPage';
 import ClientEditPage from './pages/Master/ClientEditPage';
 import ClientCreatePage from './pages/Master/ClientCreatePage';
+import TransactionsPage from './pages/Master/TransactionsPage';
 
 function App() {
   return (
@@ -113,6 +114,14 @@ function App() {
               element={
                 <ProtectedRoute allowedUserTypes={['MASTER']}>
                   <ClientEditPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/master/transactions" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <TransactionsPage />
                 </ProtectedRoute>
               } 
             />

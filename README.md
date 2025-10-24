@@ -70,6 +70,10 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - ✅ **Paginação**: Sistema de paginação para listagem de clientes
 - ✅ **Filtros e Busca**: Busca por nome/email e ordenação
 - ✅ **Navegação Intuitiva**: Botões de voltar e editar nos headers
+- ✅ **Módulo de Transações**: Listagem completa de todas as transações do sistema
+- ✅ **Filtros Avançados**: Busca por cliente, tipo, status e ordenação
+- ✅ **Paginação Robusta**: Sistema completo com navegação por páginas
+- ✅ **Interface Consistente**: Design alinhado com outros módulos
 
 ### 🎨 Interface do Usuário
 - ✅ Página de login responsiva
@@ -188,6 +192,7 @@ GET  /api/client/transactions/recent          # Transações recentes (dashboard
 ```http
 GET /api/master/transactions/stats    # Estatísticas administrativas
 GET /api/master/transactions/recent   # Transações recentes de todos os usuários
+GET /api/master/transactions/list     # Listar todas as transações com filtros e paginação
 GET /api/master/clients/list          # Listar clientes com paginação
 POST /api/master/clients/create       # Cadastrar novo cliente
 GET /api/master/clients/{id}          # Visualizar detalhes do cliente
@@ -269,6 +274,12 @@ curl -X GET http://localhost:8080/api/master/transactions/stats \
 #### **Consultar Transações Recentes (Master)**
 ```bash
 curl -X GET "http://localhost:8080/api/master/transactions/recent?limit=4&days=30" \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Listar Todas as Transações (Master)**
+```bash
+curl -X GET "http://localhost:8080/api/master/transactions/list?page=1&limit=10&search=&type=&status=&sort_by=created_at&sort_order=desc" \
   -H "Authorization: Bearer [TOKEN]"
 ```
 
@@ -462,6 +473,16 @@ user-withdrawal-control/
 - **Formulários responsivos**: Layout em grade com campos organizados
 - **Validação em tempo real**: Feedback imediato para o usuário
 
+### 📊 Módulo de Transações Master
+- **Listagem completa**: Visualização de todas as transações do sistema
+- **Filtros avançados**: Busca por cliente, tipo (DEPOSITO/SAQUE), status e ordenação
+- **Paginação robusta**: Sistema completo com navegação por páginas e ellipsis
+- **Interface consistente**: Design alinhado com outros módulos do sistema
+- **Cards informativos**: Exibição clara de dados com ícones coloridos por tipo/status
+- **Botão "Ver Cliente"**: Navegação direta para detalhes do cliente
+- **Informações detalhadas**: PIX, datas formatadas, motivos de falha
+- **Header limpo**: Interface simplificada sem informações redundantes
+
 ### 🔐 Sistema de Autenticação Aprimorado
 - **Suporte a usuários sem senha**: Cadastro pelo master sem definir senha
 - **Primeiro acesso seguro**: Cliente define senha no primeiro login
@@ -482,6 +503,8 @@ user-withdrawal-control/
 - **Rotas organizadas**: Prefixos consistentes em todas as rotas
 - **Estrutura de pastas**: Frontend organizado por tipo de usuário
 - **Banco de dados atualizado**: Campo password permite NULL, status CANCELADO adicionado
+- **Correção de conflitos de rotas**: Centralização no routes.php para evitar conflitos
+- **Arquitetura de rotas consistente**: Padrão unificado para todos os módulos
 
 ### 🐛 Correções e Melhorias
 - **Loop infinito resolvido**: Substituição de window.location.href por navigate()
@@ -530,6 +553,10 @@ user-withdrawal-control/
 - **Navegação intuitiva** com botões de ação nos headers
 - **Formulários responsivos** com layout em grade
 - **Validação de dados** em tempo real
+- **Módulo de transações** com listagem completa do sistema
+- **Filtros avançados** por cliente, tipo, status e ordenação
+- **Paginação robusta** com navegação por páginas
+- **Interface consistente** alinhada com outros módulos
 
 ### 📋 Próximas Funcionalidades
 - **CRON Job** para processar saques agendados automaticamente
@@ -669,6 +696,7 @@ CREATE TABLE withdrawal_details (
 ### 👑 Administração (Protegido - Master)
 - `GET /api/master/transactions/stats` - Estatísticas administrativas
 - `GET /api/master/transactions/recent` - Transações recentes de todos os usuários
+- `GET /api/master/transactions/list` - Listar todas as transações com filtros e paginação
 - `GET /api/master/clients/list` - Listar clientes com paginação
 - `POST /api/master/clients/create` - Cadastrar novo cliente
 - `GET /api/master/clients/{id}` - Visualizar detalhes do cliente
@@ -806,7 +834,7 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 18 endpoints implementados e testados (7 cliente + 5 master + 4 auth)
+- **API**: 19 endpoints implementados e testados (7 cliente + 6 master + 4 auth)
 - **Componentes**: 15+ componentes shadcn/ui customizados
 - **Hooks**: 2 hooks customizados (useAuth, useExport)
 - **Arquitetura**: Separação por tipos de usuário (Client/Master)

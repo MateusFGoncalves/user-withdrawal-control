@@ -18,13 +18,12 @@ use App\Model\Transaction;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Di\Annotation\Inject;
 
-#[Controller]
+#[Controller(prefix: '/master')]
 class ClientController extends AbstractController
 {
     #[Inject]
     protected ValidatorFactoryInterface $validationFactory;
 
-    #[GetMapping('/list')]
     public function getClients(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
@@ -140,7 +139,6 @@ class ClientController extends AbstractController
         }
     }
 
-    #[PostMapping('/create')]
     public function createClient(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
@@ -208,7 +206,6 @@ class ClientController extends AbstractController
         }
     }
 
-    #[GetMapping('/{id}')]
     public function getClient(RequestInterface $request, ResponseInterface $response, int $id): PsrResponseInterface
     {
         try {
@@ -309,7 +306,6 @@ class ClientController extends AbstractController
         }
     }
 
-    #[PutMapping('/{id}')]
     public function updateClient(RequestInterface $request, ResponseInterface $response, int $id): PsrResponseInterface
     {
         try {

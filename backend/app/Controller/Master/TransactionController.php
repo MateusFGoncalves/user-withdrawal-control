@@ -17,7 +17,6 @@ use App\Model\Transaction;
 #[Controller]
 class TransactionController extends AbstractController
 {
-    #[GetMapping('/stats')]
     public function getStats(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
@@ -88,7 +87,6 @@ class TransactionController extends AbstractController
         }
     }
 
-    #[GetMapping('/recent')]
     public function getRecentTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
@@ -140,6 +138,113 @@ class TransactionController extends AbstractController
                     'transactions' => $formattedTransactions,
                     'period' => "Últimos {$days} dias",
                     'total_found' => $formattedTransactions->count(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+
+    public function getTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            // Verificar se o usuário é MASTER
+            $user = $this->getUserFromToken();
+            if (!$user || $user->user_type !== 'MASTER') {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Acesso negado. Apenas administradores.',
+                ])->withStatus(403);
+            }
+
+            // Parâmetros de paginação
+            $page = (int) $request->input('page', 1);
+            $limit = (int) $request->input('limit', 10);
+            $search = $request->input('search', '');
+            $type = $request->input('type', '');
+            $status = $request->input('status', '');
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortOrder = $request->input('sort_order', 'desc');
+
+            // Construir query
+            $query = Transaction::with(['user', 'withdrawalDetails']);
+
+            // Filtros
+            if ($search) {
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            if ($type) {
+                $query->where('type', $type);
+            }
+
+            if ($status) {
+                $query->where('status', $status);
+            }
+
+            // Ordenação
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Paginação manual
+            $offset = ($page - 1) * $limit;
+            $total = $query->count();
+            $transactions = $query->offset($offset)->limit($limit)->get();
+
+            // Formatar dados das transações
+            $formattedTransactions = $transactions->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'type' => $transaction->type,
+                    'amount' => $transaction->amount,
+                    'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
+                    'status' => $transaction->status,
+                    'user' => [
+                        'id' => $transaction->user->id,
+                        'name' => $transaction->user->name,
+                        'email' => $transaction->user->email,
+                    ],
+                    'created_at' => $transaction->created_at,
+                    'formatted_created_at' => $transaction->created_at->format('d/m/Y H:i'),
+                    'scheduled_at' => $transaction->scheduled_at,
+                    'formatted_scheduled_at' => $transaction->scheduled_at ? $transaction->scheduled_at->format('d/m/Y H:i') : null,
+                    'processed_at' => $transaction->processed_at,
+                    'formatted_processed_at' => $transaction->processed_at ? $transaction->processed_at->format('d/m/Y H:i') : null,
+                    'pix_type' => $transaction->withdrawalDetails?->pix_type,
+                    'pix_key' => $transaction->withdrawalDetails?->pix_key,
+                    'failure_reason' => $transaction->failure_reason,
+                ];
+            });
+
+            // Calcular informações de paginação
+            $lastPage = ceil($total / $limit);
+            $from = $offset + 1;
+            $to = min($offset + $limit, $total);
+
+            return $response->json([
+                'success' => true,
+                'data' => [
+                    'transactions' => $formattedTransactions,
+                    'pagination' => [
+                        'current_page' => $page,
+                        'last_page' => $lastPage,
+                        'per_page' => $limit,
+                        'total' => $total,
+                        'from' => $from,
+                        'to' => $to,
+                    ],
+                    'filters' => [
+                        'search' => $search,
+                        'type' => $type,
+                        'status' => $status,
+                        'sort_by' => $sortBy,
+                        'sort_order' => $sortOrder,
+                    ],
                 ],
             ]);
         } catch (\Exception $e) {
