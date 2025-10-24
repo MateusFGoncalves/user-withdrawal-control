@@ -50,8 +50,12 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - ✅ **Módulo de Saque**:
   - Saque Imediato: Débito instantâneo + validação de saldo
   - Saque Agendado: Agendamento até 7 dias (não debita no momento)
-- ✅ **Extrato**: Histórico completo de transações com filtros
+  - Cancelamento de Saques Agendados: Cancelar saques pendentes
+- ✅ **Extrato**: Histórico completo de transações com filtros e paginação
 - ✅ **Suporte PIX**: Saques via chave PIX (EMAIL, PHONE, CPF, RANDOM)
+- ✅ **Máscara Monetária**: Formatação automática de valores em reais
+- ✅ **Notificações Toast**: Feedback visual para ações do usuário
+- ✅ **Interface Responsiva**: Design moderno com shadcn/ui
 
 ### 👑 Perfil MASTER (Em desenvolvimento)
 - 🔄 Gestão de Clientes
@@ -133,7 +137,7 @@ docker-compose up -d
 - `account_id` - Referência à conta
 - `type` - Tipo (DEPOSITO/SAQUE)
 - `amount` - Valor da transação
-- `status` - Status (PENDENTE/PROCESSADO/FALHOU)
+- `status` - Status (PENDENTE/PROCESSADO/FALHOU/CANCELADO)
 - `scheduled_at` - Data de agendamento (saques)
 - `processed_at` - Data de processamento
 - `failure_reason` - Motivo da falha
@@ -163,9 +167,11 @@ GET /api/account/info        # Informações da conta
 
 ### 💸 Transações (Protegido)
 ```http
-POST /api/transactions/deposit    # Realizar depósito
-POST /api/transactions/withdraw   # Realizar saque
-GET  /api/transactions/statement  # Consultar extrato
+POST /api/transactions/deposit         # Realizar depósito
+POST /api/transactions/withdraw        # Realizar saque
+POST /api/transactions/cancel-scheduled # Cancelar saque agendado
+GET  /api/transactions/statement       # Consultar extrato
+GET  /api/transactions/recent          # Transações recentes (dashboard)
 ```
 
 ### 📝 Exemplos de Uso
@@ -213,6 +219,20 @@ curl -X GET http://localhost:8080/api/transactions/statement \
   -H "Authorization: Bearer [TOKEN]"
 ```
 
+#### **Consultar Transações Recentes**
+```bash
+curl -X GET "http://localhost:8080/api/transactions/recent?limit=5&days=30" \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Cancelar Saque Agendado**
+```bash
+curl -X POST http://localhost:8080/api/transactions/cancel-scheduled \
+  -H "Authorization: Bearer [TOKEN]" \
+  -H "Content-Type: application/json" \
+  -d '{"transaction_id": 123}'
+```
+
 ## 📋 Regras de Negócio
 
 ### 💰 Operações Financeiras
@@ -236,6 +256,8 @@ curl -X GET http://localhost:8080/api/transactions/statement \
 - ✅ Valor NÃO é debitado no agendamento
 - ✅ Transação marcada como PENDENTE
 - ✅ Processamento via CRON (futuro)
+- ✅ Cancelamento permitido até processamento
+- ✅ Status CANCELADO quando cancelado pelo usuário
 
 #### **Validações Gerais**
 - ✅ Saldo nunca pode ser negativo
@@ -316,13 +338,32 @@ user-withdrawal-control/
 │   ├── src/
 │   │   ├── components/     # Componentes reutilizáveis
 │   │   │   ├── ui/         # Componentes shadcn/ui
+│   │   │   │   ├── button.tsx         # Botão
+│   │   │   │   ├── card.tsx           # Card
+│   │   │   │   ├── input.tsx          # Input
+│   │   │   │   ├── select.tsx         # Select
+│   │   │   │   ├── badge.tsx          # Badge
+│   │   │   │   ├── pagination.tsx     # Paginação
+│   │   │   │   ├── date-picker.tsx    # Seletor de data
+│   │   │   │   ├── input-group.tsx    # Grupo de input
+│   │   │   │   └── confirmation-modal.tsx # Modal de confirmação
 │   │   │   ├── layout/     # Componentes de layout
+│   │   │   │   ├── Sidebar.tsx        # Barra lateral
+│   │   │   │   └── Navbar.tsx         # Barra superior
 │   │   │   ├── theme-provider.tsx     # Provedor de tema
 │   │   │   └── theme-toggle.tsx       # Toggle dark/light
 │   │   ├── pages/          # Páginas da aplicação
 │   │   │   ├── Login.tsx              # Página de login
 │   │   │   ├── Register.tsx           # Página de cadastro
-│   │   │   └── Dashboard.tsx          # Dashboard principal
+│   │   │   ├── Dashboard.tsx          # Dashboard principal
+│   │   │   ├── ClientDashboard.tsx    # Dashboard do cliente
+│   │   │   ├── AdminDashboard.tsx     # Dashboard do admin
+│   │   │   ├── DepositPage.tsx        # Página de depósito
+│   │   │   ├── WithdrawPage.tsx       # Página de saque
+│   │   │   └── StatementPage.tsx      # Página de extrato
+│   │   ├── hooks/          # Hooks customizados
+│   │   │   ├── useAuth.ts             # Hook de autenticação
+│   │   │   └── useMoneyMask.ts        # Hook de máscara monetária
 │   │   ├── lib/            # Utilitários
 │   │   │   └── utils.ts               # Funções utilitárias
 │   │   ├── utils/          # Utilitários específicos
@@ -346,12 +387,18 @@ user-withdrawal-control/
 - **Depósitos imediatos** com validação
 - **Saques imediatos** com validação de saldo
 - **Saques agendados** (até 7 dias)
-- **Extrato completo** com filtros
+- **Cancelamento de saques agendados** com confirmação
+- **Extrato completo** com filtros e paginação
+- **Transações recentes** no dashboard
 - **Suporte PIX** (EMAIL, PHONE, CPF, RANDOM)
+- **Máscara monetária** para valores em reais
+- **Notificações toast** para feedback
 - **Interface moderna** com shadcn/ui
 - **Modo escuro/claro**
+- **Design responsivo** e acessível
 - **Migrations e seeders** automatizados
 - **API REST completa** documentada
+- **Lógica centralizada** no modelo Account
 
 ### 🔄 Em Desenvolvimento (Perfil MASTER)
 - Gestão de clientes
@@ -361,11 +408,14 @@ user-withdrawal-control/
 - Dashboard administrativo
 
 ### 📋 Próximas Funcionalidades
-- **CRON Job** para processar saques agendados
-- **Notificações por email** para confirmações
-- **Relatórios financeiros** detalhados
-- **Auditoria** de operações
-- **API de webhooks** para integrações
+- **CRON Job** para processar saques agendados automaticamente
+- **Notificações por email** para confirmações de transações
+- **Relatórios financeiros** detalhados e exportação
+- **Auditoria** de operações e logs de sistema
+- **API de webhooks** para integrações externas
+- **Dashboard administrativo** completo para perfil MASTER
+- **Gestão de usuários** e contas pelo admin
+- **Relatórios de performance** e métricas
 
 ## 🔧 Desenvolvimento
 
@@ -501,6 +551,36 @@ O projeto utiliza o shadcn/ui como base para o design system, garantindo:
 - Responsividade
 - Tipografia moderna
 
+### 🎯 Funcionalidades de UX/UI Implementadas
+
+#### **💳 Interface de Transações**
+- **Cards modernos** com hover effects e sombras
+- **Ícones coloridos** que seguem o status da transação
+- **Badges de status** com cores consistentes
+- **Layout responsivo** para todos os dispositivos
+- **Animações suaves** para melhor experiência
+
+#### **💰 Formulários Financeiros**
+- **Máscara monetária** automática para valores em reais
+- **Validação em tempo real** com feedback visual
+- **Input groups** para formatação de valores
+- **Date picker** customizado para agendamentos
+- **Notificações toast** para feedback de ações
+
+#### **📊 Dashboard e Extrato**
+- **Paginação** para grandes volumes de dados
+- **Filtros avançados** por tipo e status
+- **Transações recentes** no dashboard
+- **Saldo disponível** vs saldo total
+- **Cancelamento de saques** com confirmação
+
+#### **🎨 Sistema de Cores**
+- **Verde**: Depósitos processados
+- **Vermelho**: Saques processados/falhados
+- **Amarelo**: Transações pendentes
+- **Cinza**: Transações canceladas
+- **Azul**: Informações de agendamento
+
 ## 🚀 Deploy
 
 ### Produção
@@ -542,19 +622,27 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - ✅ **Gerenciamento de contas digitais** com saldo em tempo real
 - ✅ **Depósitos e saques** via PIX com validações robustas
 - ✅ **Saques agendados** para até 7 dias no futuro
-- ✅ **Extrato completo** com histórico de transações
+- ✅ **Cancelamento de saques agendados** com confirmação
+- ✅ **Extrato completo** com histórico de transações e paginação
+- ✅ **Transações recentes** no dashboard
+- ✅ **Máscara monetária** para formatação de valores
+- ✅ **Notificações toast** para feedback do usuário
 - ✅ **Interface moderna** com modo escuro/claro
+- ✅ **Design responsivo** e acessível
 - ✅ **API REST** completa e documentada
 - ✅ **Arquitetura de microsserviços** containerizada
 - ✅ **Migrations e seeders** automatizados
+- ✅ **Lógica centralizada** para cálculos de saldo
 
 ### 🚀 Tecnologias Utilizadas
 
-- **Backend**: PHP Hyperf 3 + MySQL + Redis + JWT
-- **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS
+- **Backend**: PHP Hyperf 3 + MySQL + Redis + JWT + Doctrine DBAL
+- **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 8 endpoints implementados e testados
+- **API**: 10 endpoints implementados e testados
+- **Componentes**: 15+ componentes shadcn/ui customizados
+- **Hooks**: 2 hooks customizados (useAuth, useMoneyMask)
 
 ---
 
