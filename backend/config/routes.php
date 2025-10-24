@@ -5,6 +5,7 @@ use Hyperf\HttpServer\Router\Router;
 // Rotas de autenticação
 Router::post('/auth/register', 'App\Controller\AuthController@register');
 Router::post('/auth/login', 'App\Controller\AuthController@login');
+Router::post('/auth/set-password', 'App\Controller\AuthController@setInitialPassword');
 Router::get('/auth/me', 'App\Controller\AuthController@me');
 
 // Grupo de rotas para clientes
@@ -23,4 +24,8 @@ Router::addGroup('/client', function () {
 Router::addGroup('/master', function () {
     Router::get('/transactions/stats', 'App\Controller\Master\TransactionController@getStats');
     Router::get('/transactions/recent', 'App\Controller\Master\TransactionController@getRecentTransactions');
+    Router::get('/clients/list', 'App\Controller\Master\ClientController@getClients');
+    Router::post('/clients/create', 'App\Controller\Master\ClientController@createClient');
+    Router::get('/clients/{id}', 'App\Controller\Master\ClientController@getClient');
+    Router::put('/clients/{id}', 'App\Controller\Master\ClientController@updateClient');
 });

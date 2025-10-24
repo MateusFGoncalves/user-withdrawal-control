@@ -34,14 +34,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     { icon: History, label: 'Extrato', href: '/client/statement' },
   ];
 
-  const adminMenuItems = [
-    { icon: Home, label: 'Dashboard', href: '/admin' },
-    { icon: Users, label: 'Clientes', href: '/admin/clients' },
-    { icon: CreditCard, label: 'Contas', href: '/admin/accounts' },
-    { icon: BarChart3, label: 'Transações', href: '/admin/transactions' },
+  const masterMenuItems = [
+    { icon: Home, label: 'Dashboard', href: '/master/dashboard' },
+    { icon: Users, label: 'Clientes', href: '/master/clients' },
+    { icon: CreditCard, label: 'Contas', href: '/master/accounts' },
+    { icon: BarChart3, label: 'Transações', href: '/master/transactions' },
   ];
 
-  const menuItems = isClient ? clientMenuItems : isMaster ? adminMenuItems : [];
+  const menuItems = isClient ? clientMenuItems : isMaster ? masterMenuItems : [];
 
   const handleNavigation = (href: string) => {
     navigate(href);

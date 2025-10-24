@@ -27,13 +27,20 @@ class User extends Model
         'password',
     ];
 
-    public function setPasswordAttribute(string $value): void
+    public function setPasswordAttribute(?string $value): void
     {
-        $this->attributes['password'] = password_hash($value, PASSWORD_DEFAULT);
+        if ($value !== null) {
+            $this->attributes['password'] = password_hash($value, PASSWORD_DEFAULT);
+        } else {
+            $this->attributes['password'] = null;
+        }
     }
 
     public function verifyPassword(string $password): bool
     {
+        if ($this->password === null) {
+            return false;
+        }
         return password_verify($password, $this->password);
     }
 

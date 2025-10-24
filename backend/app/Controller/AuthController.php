@@ -65,7 +65,22 @@ class AuthController
         try {
             $user = User::where('email', $request->input('email'))->first();
 
-            if (!$user || !$user->verifyPassword($request->input('password'))) {
+            if (!$user) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Credenciais inválidas',
+                ])->withStatus(401);
+            }
+
+            // Verificar se o usuário tem senha definida
+            if ($user->password === null) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Usuário sem senha definida. Entre em contato com o administrador.',
+                ])->withStatus(401);
+            }
+
+            if (!$user->verifyPassword($request->input('password'))) {
                 return $response->json([
                     'success' => false,
                     'message' => 'Credenciais inválidas',
@@ -135,6 +150,53 @@ class AuthController
                 'success' => false,
                 'message' => 'Token inválido',
             ])->withStatus(401);
+        }
+    }
+
+    public function setInitialPassword(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            $user = User::where('email', $request->input('email'))->first();
+
+            if (!$user) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Usuário não encontrado',
+                ])->withStatus(404);
+            }
+
+            // Verificar se o usuário já tem senha definida
+            if ($user->password !== null) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Usuário já possui senha definida',
+                ])->withStatus(400);
+            }
+
+            // Definir a senha
+            $user->password = $request->input('password');
+            $user->save();
+
+            $token = $this->generateToken($user);
+
+            return $response->json([
+                'success' => true,
+                'message' => 'Senha definida com sucesso',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'user_type' => $user->user_type,
+                    ],
+                    'token' => $token,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
         }
     }
 

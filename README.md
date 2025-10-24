@@ -64,9 +64,12 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - ✅ **Total de Fundos**: Saldo total de todas as contas do banco
 - ✅ **Saques Agendados**: Total de saques pendentes de todos os usuários
 - ✅ **Transações Recentes**: Últimas 4 transações de todos os usuários
-- 🔄 Gestão de Clientes (em desenvolvimento)
-- 🔄 Gestão de Contas (em desenvolvimento)
-- 🔄 Histórico Global de Transações (em desenvolvimento)
+- ✅ **Gestão de Clientes**: Listagem, visualização, edição e cadastro de clientes
+- ✅ **Cadastro de Clientes**: Formulário simplificado (apenas nome e email)
+- ✅ **Primeiro Acesso**: Cliente define sua própria senha no primeiro login
+- ✅ **Paginação**: Sistema de paginação para listagem de clientes
+- ✅ **Filtros e Busca**: Busca por nome/email e ordenação
+- ✅ **Navegação Intuitiva**: Botões de voltar e editar nos headers
 
 ### 🎨 Interface do Usuário
 - ✅ Página de login responsiva
@@ -161,6 +164,7 @@ docker-compose up -d
 ```http
 POST /api/auth/register
 POST /api/auth/login
+POST /api/auth/set-password
 GET  /api/auth/me
 ```
 
@@ -184,6 +188,10 @@ GET  /api/client/transactions/recent          # Transações recentes (dashboard
 ```http
 GET /api/master/transactions/stats    # Estatísticas administrativas
 GET /api/master/transactions/recent   # Transações recentes de todos os usuários
+GET /api/master/clients/list          # Listar clientes com paginação
+POST /api/master/clients/create       # Cadastrar novo cliente
+GET /api/master/clients/{id}          # Visualizar detalhes do cliente
+PUT /api/master/clients/{id}          # Editar informações do cliente
 ```
 
 ### 📝 Exemplos de Uso
@@ -264,6 +272,27 @@ curl -X GET "http://localhost:8080/api/master/transactions/recent?limit=4&days=3
   -H "Authorization: Bearer [TOKEN]"
 ```
 
+#### **Listar Clientes (Master)**
+```bash
+curl -X GET "http://localhost:8080/api/master/clients/list?page=1&limit=10" \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Cadastrar Cliente (Master)**
+```bash
+curl -X POST http://localhost:8080/api/master/clients/create \
+  -H "Authorization: Bearer [TOKEN]" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "João Silva", "email": "joao@exemplo.com"}'
+```
+
+#### **Definir Senha Inicial (Cliente)**
+```bash
+curl -X POST http://localhost:8080/api/auth/set-password \
+  -H "Content-Type: application/json" \
+  -d '{"email": "joao@exemplo.com", "password": "123456"}'
+```
+
 ## 📋 Regras de Negócio
 
 ### 💰 Operações Financeiras
@@ -302,6 +331,8 @@ curl -X GET "http://localhost:8080/api/master/transactions/recent?limit=4&days=3
 - ✅ Validação de permissões por perfil
 - ✅ Senhas hashadas com bcrypt
 - ✅ Validação de entrada em todas as rotas
+- ✅ Suporte a usuários sem senha (primeiro acesso)
+- ✅ Verificação segura de senhas null
 
 ### 📊 Dados de Teste
 - **Cliente**: `cliente@exemplo.com` / `123456` (Saldo: R$ 1.000,00)
@@ -421,28 +452,43 @@ user-withdrawal-control/
 
 ## 🆕 Melhorias Recentes
 
-### ✨ Dashboard Master Implementado
-- **Estatísticas em tempo real**: Total de clientes, fundos e saques agendados
-- **Transações recentes**: Últimas 4 transações de todos os usuários
-- **Interface consistente**: Mesmo padrão visual do dashboard do cliente
-- **Navegação otimizada**: Prefixos /client e /master para organização
+### ✨ Módulo de Gestão de Clientes (Master)
+- **CRUD completo**: Listagem, visualização, edição e cadastro de clientes
+- **Cadastro simplificado**: Apenas nome e email (senha definida no primeiro acesso)
+- **Sistema de primeiro acesso**: Cliente define sua própria senha no primeiro login
+- **Paginação avançada**: Sistema robusto com navegação por páginas
+- **Filtros e busca**: Busca por nome/email e ordenação por data/nome
+- **Navegação intuitiva**: Botões de voltar e editar nos headers das páginas
+- **Formulários responsivos**: Layout em grade com campos organizados
+- **Validação em tempo real**: Feedback imediato para o usuário
+
+### 🔐 Sistema de Autenticação Aprimorado
+- **Suporte a usuários sem senha**: Cadastro pelo master sem definir senha
+- **Primeiro acesso seguro**: Cliente define senha no primeiro login
+- **Verificação segura**: Tratamento correto de senhas null
+- **Endpoint de definição de senha**: `/api/auth/set-password` para primeiro acesso
+- **Mensagens claras**: Feedback adequado para diferentes cenários de login
+
+### 🎨 Interface e UX Melhoradas
+- **Botões de limpeza de filtros**: X no campo de busca e botão "Limpar" geral
+- **Layout consistente**: Formulários seguem padrão estabelecido
+- **Navegação otimizada**: Headers com ações contextuais
+- **Remoção de elementos desnecessários**: Tag "Cliente" removida da listagem
+- **Responsividade aprimorada**: Layouts adaptáveis para diferentes telas
 
 ### 🔧 Refatoração da Arquitetura
 - **Separação de controladores**: Client/ e Master/ para melhor organização
 - **AbstractController**: Centralização da lógica comum (getUserFromToken)
 - **Rotas organizadas**: Prefixos consistentes em todas as rotas
 - **Estrutura de pastas**: Frontend organizado por tipo de usuário
+- **Banco de dados atualizado**: Campo password permite NULL, status CANCELADO adicionado
 
-### 🐛 Correções de Navegação
+### 🐛 Correções e Melhorias
 - **Loop infinito resolvido**: Substituição de window.location.href por navigate()
 - **Redirecionamentos consistentes**: Uso do React Router em toda aplicação
 - **Navegação com replace**: Evita acúmulo desnecessário no histórico
-
-### 📊 Funcionalidades do Dashboard Master
-- **Total de Clientes**: Contagem de usuários CLIENTE cadastrados
-- **Total de Fundos**: Soma de todos os saldos das contas
-- **Saques Agendados**: Total de saques pendentes de todos os usuários
-- **Transações Recentes**: Visualização das últimas 4 transações do sistema
+- **Tratamento de erros**: Mensagens claras para usuários sem senha
+- **Validação robusta**: Verificação segura de senhas null
 
 ## 🚀 Status do Projeto
 
@@ -476,11 +522,14 @@ user-withdrawal-control/
 - **Interface consistente** com o dashboard do cliente
 - **Navegação consistente** com prefixos /master
 - **API REST** para dados administrativos
-
-### 🔄 Em Desenvolvimento (Perfil MASTER)
-- Gestão de clientes
-- Gestão de contas
-- Histórico global de transações
+- **Gestão completa de clientes** com CRUD
+- **Cadastro simplificado** de clientes (nome e email)
+- **Sistema de primeiro acesso** para definição de senha
+- **Paginação avançada** para listagem de clientes
+- **Filtros e busca** por nome e email
+- **Navegação intuitiva** com botões de ação nos headers
+- **Formulários responsivos** com layout em grade
+- **Validação de dados** em tempo real
 
 ### 📋 Próximas Funcionalidades
 - **CRON Job** para processar saques agendados automaticamente
@@ -488,9 +537,9 @@ user-withdrawal-control/
 - **Relatórios financeiros** detalhados e exportação
 - **Auditoria** de operações e logs de sistema
 - **API de webhooks** para integrações externas
-- **Dashboard administrativo** completo para perfil MASTER
-- **Gestão de usuários** e contas pelo admin
 - **Relatórios de performance** e métricas
+- **Gestão de contas** pelo administrador
+- **Histórico global de transações** com filtros avançados
 
 ## 🔧 Desenvolvimento
 
@@ -547,7 +596,7 @@ CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NULL,
     user_type ENUM('CLIENTE', 'MASTER') DEFAULT 'CLIENTE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -574,7 +623,7 @@ CREATE TABLE transactions (
     account_id BIGINT UNSIGNED NOT NULL,
     type ENUM('DEPOSITO', 'SAQUE') NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
-    status ENUM('PENDENTE', 'PROCESSADO', 'FALHOU') DEFAULT 'PENDENTE',
+    status ENUM('PENDENTE', 'PROCESSADO', 'FALHOU', 'CANCELADO') DEFAULT 'PENDENTE',
     scheduled_at TIMESTAMP NULL,
     processed_at TIMESTAMP NULL,
     failure_reason TEXT NULL,
@@ -620,6 +669,10 @@ CREATE TABLE withdrawal_details (
 ### 👑 Administração (Protegido - Master)
 - `GET /api/master/transactions/stats` - Estatísticas administrativas
 - `GET /api/master/transactions/recent` - Transações recentes de todos os usuários
+- `GET /api/master/clients/list` - Listar clientes com paginação
+- `POST /api/master/clients/create` - Cadastrar novo cliente
+- `GET /api/master/clients/{id}` - Visualizar detalhes do cliente
+- `PUT /api/master/clients/{id}` - Editar informações do cliente
 
 ## 🎨 Design System
 
@@ -741,6 +794,11 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - ✅ **Arquitetura de microsserviços** containerizada
 - ✅ **Migrations e seeders** automatizados
 - ✅ **Lógica centralizada** para cálculos de saldo
+- ✅ **Gestão completa de clientes** (CRUD) para administradores
+- ✅ **Sistema de primeiro acesso** para definição de senha
+- ✅ **Cadastro simplificado** de clientes pelo master
+- ✅ **Paginação e filtros** avançados
+- ✅ **Navegação intuitiva** com botões contextuais
 
 ### 🚀 Tecnologias Utilizadas
 
@@ -748,7 +806,7 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 13 endpoints implementados e testados (7 cliente + 2 master + 3 auth)
+- **API**: 18 endpoints implementados e testados (7 cliente + 5 master + 4 auth)
 - **Componentes**: 15+ componentes shadcn/ui customizados
 - **Hooks**: 2 hooks customizados (useAuth, useExport)
 - **Arquitetura**: Separação por tipos de usuário (Client/Master)

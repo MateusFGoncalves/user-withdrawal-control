@@ -10,6 +10,10 @@ import MasterDashboard from './pages/Master/Dashboard';
 import DepositPage from './pages/Client/DepositPage';
 import WithdrawPage from './pages/Client/WithdrawPage';
 import StatementPage from './pages/Client/StatementPage';
+import ClientsPage from './pages/Master/ClientsPage';
+import ClientDetailPage from './pages/Master/ClientDetailPage';
+import ClientEditPage from './pages/Master/ClientEditPage';
+import ClientCreatePage from './pages/Master/ClientCreatePage';
 
 function App() {
   return (
@@ -77,6 +81,38 @@ function App() {
               element={
                 <ProtectedRoute allowedUserTypes={['MASTER']}>
                   <MasterDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/master/clients" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <ClientsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/master/clients/create" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <ClientCreatePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/master/clients/:id" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <ClientDetailPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/master/clients/:id/edit" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <ClientEditPage />
                 </ProtectedRoute>
               } 
             />
