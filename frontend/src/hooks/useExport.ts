@@ -68,7 +68,7 @@ export const useExport = () => {
           }
         } else if (xhr.status === 401) {
           toast.error('Sessão expirada. Faça login novamente.');
-          window.location.href = '/login';
+          // O redirecionamento será feito pelo useAuth hook
         } else {
           toast.error('Erro ao exportar arquivo Excel');
         }

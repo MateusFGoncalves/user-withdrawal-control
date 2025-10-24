@@ -6,140 +6,100 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { 
+  Users, 
   DollarSign, 
   TrendingUp, 
-  TrendingDown, 
+  Activity,
   CreditCard,
-  ArrowUpRight,
-  ArrowDownLeft,
-  History,
+  BarChart3,
   Clock
 } from 'lucide-react';
-import { apiClient } from '../../utils/apiClient';
+import { getApiUrl } from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
-interface AccountData {
-  balance: number;
-  formatted_balance: string;
-  total_balance: number;
-  formatted_total_balance: string;
-  scheduled_withdrawals: number;
-  formatted_scheduled_withdrawals: string;
+interface AdminStats {
+  totalClients: number;
+  totalTransactions: number;
+  totalFunds: number;
+  formattedTotalFunds: string;
+  totalScheduledWithdrawals: number;
+  formattedTotalScheduledWithdrawals: string;
 }
 
-interface Transaction {
+interface RecentTransaction {
   id: number;
-  type: 'DEPOSITO' | 'SAQUE';
-  amount: string;
+  type: string;
+  amount: number;
   formatted_amount: string;
-  status: 'PENDENTE' | 'PROCESSADO' | 'FALHOU' | 'CANCELADO';
+  status: string;
+  user_name: string;
+  user_email: string;
   created_at: string;
+  formatted_date: string;
   scheduled_at?: string;
-  withdrawal_details?: {
-    pix_type: string;
-    pix_key: string;
-  };
+  processed_at?: string;
+  pix_type?: string;
+  pix_key?: string;
+  failure_reason?: string;
 }
-
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [accountData, setAccountData] = useState<AccountData | null>(null);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
-  const [scheduledWithdrawals, setScheduledWithdrawals] = useState<number>(0);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAccountData();
-    fetchRecentTransactions();
+    fetchAdminData();
   }, []);
 
-  const fetchAccountData = async () => {
+  const fetchAdminData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.get('/client/account/balance', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        setAccountData(data.data);
-        // Usar os dados de saques agendados do backend
-        setScheduledWithdrawals(data.data.scheduled_withdrawals || 0);
+      if (!token) {
+        toast.error('Token de autenticação não encontrado');
+        return;
       }
-    } catch (error) {
-      // Se for erro 401, o apiClient já fez o logout e redirecionamento
-      if (error instanceof Error && error.message !== 'Unauthorized') {
-        toast.error('Erro ao buscar dados da conta');
-      }
-    }
-  };
 
-  const fetchRecentTransactions = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await apiClient.get('/client/transactions/recent?limit=4&days=30', {
+      const response = await fetch(getApiUrl('/master/transactions/stats'), {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Sessão expirada. Faça login novamente.');
+          navigate('/login', { replace: true });
+          return;
+        }
+        if (response.status === 403) {
+          toast.error('Acesso negado. Apenas administradores.');
+          return;
+        }
+        throw new Error('Erro ao buscar dados administrativos');
+      }
+
       const data = await response.json();
       
       if (data.success) {
-        setRecentTransactions(data.data.transactions);
+        setStats(data.data.stats);
+        setRecentTransactions(data.data.recentTransactions);
+      } else {
+        toast.error(data.message || 'Erro ao buscar dados administrativos');
       }
     } catch (error) {
-      // Se for erro 401, o apiClient já fez o logout e redirecionamento
-      if (error instanceof Error && error.message !== 'Unauthorized') {
-        toast.error('Erro ao buscar transações');
-      }
+      console.error('Erro ao buscar dados administrativos:', error);
+      toast.error('Erro ao buscar dados administrativos');
     } finally {
       setLoading(false);
     }
   };
-
-
-  const getPixTypeLabel = (pixType: string) => {
-    const labels: { [key: string]: string } = {
-      'EMAIL': 'E-mail',
-      'PHONE': 'Telefone',
-      'CPF': 'CPF',
-      'RANDOM': 'Chave Aleatória'
-    };
-    return labels[pixType] || pixType;
-  };
-
-  const getIconColor = (transaction: Transaction) => {
-    if (transaction.status === 'PROCESSADO') {
-      return transaction.type === 'DEPOSITO' ? 'text-green-600' : 'text-red-600';
-    } else if (transaction.status === 'PENDENTE') {
-      return 'text-yellow-600';
-    } else if (transaction.status === 'CANCELADO') {
-      return 'text-gray-600';
-    } else if (transaction.status === 'FALHOU') {
-      return 'text-red-600';
-    }
-    return transaction.type === 'DEPOSITO' ? 'text-green-600' : 'text-red-600';
-  };
-
-  const getIconBgColor = (transaction: Transaction) => {
-    if (transaction.status === 'PROCESSADO') {
-      return transaction.type === 'DEPOSITO' ? 'bg-green-50 ring-green-200' : 'bg-red-50 ring-red-200';
-    } else if (transaction.status === 'PENDENTE') {
-      return 'bg-yellow-50 ring-yellow-200';
-    } else if (transaction.status === 'CANCELADO') {
-      return 'bg-gray-50 ring-gray-200';
-    } else if (transaction.status === 'FALHOU') {
-      return 'bg-red-50 ring-red-200';
-    }
-    return transaction.type === 'DEPOSITO' ? 'bg-green-50 ring-green-200' : 'bg-red-50 ring-red-200';
-  };
-
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -174,34 +134,49 @@ const Dashboard: React.FC = () => {
               {/* Header */}
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  Bem-vindo, {user?.name}!
+                  Painel Administrativo
                 </h1>
                 <p className="text-muted-foreground">
-                  Gerencie sua conta digital e suas transações
+                  Gerencie clientes, contas e transações do sistema
                 </p>
               </div>
 
-              {/* Saldo e Saques Agendados */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Saldo Atual */}
+              {/* Estatísticas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Saldo Atual
+                      <Users className="h-5 w-5" />
+                      Total de Clientes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-primary">
-                      {accountData?.formatted_balance || 'R$ 0,00'}
+                      {stats?.totalClients || 0}
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Disponível para saque
+                      Clientes cadastrados no sistema
                     </p>
                   </CardContent>
                 </Card>
 
-                {/* Saques Agendados */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Total de Fundos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-primary">
+                      {stats?.formattedTotalFunds || 'R$ 0,00'}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Saldo total do banco
+                    </p>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -211,7 +186,7 @@ const Dashboard: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-orange-600">
-                      {accountData?.formatted_scheduled_withdrawals || 'R$ 0,00'}
+                      {stats?.formattedTotalScheduledWithdrawals || 'R$ 0,00'}
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
                       Pendentes de processamento
@@ -220,40 +195,40 @@ const Dashboard: React.FC = () => {
                 </Card>
               </div>
 
-              {/* Ações Rápidas */}
+              {/* Ações Administrativas */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/deposit')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/master/clients')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <ArrowUpRight className="h-5 w-5 text-green-600" />
-                      Depósito
+                      <Users className="h-5 w-5 text-blue-600" />
+                      Gerenciar Clientes
                     </CardTitle>
                     <CardDescription>
-                      Adicionar dinheiro à sua conta
+                      Visualizar e gerenciar clientes
                     </CardDescription>
                   </CardHeader>
                 </Card>
 
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/withdraw')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/master/accounts')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <ArrowDownLeft className="h-5 w-5 text-orange-600" />
-                      Saque
+                      <CreditCard className="h-5 w-5 text-green-600" />
+                      Gerenciar Contas
                     </CardTitle>
                     <CardDescription>
-                      Sacar dinheiro via PIX
+                      Visualizar e gerenciar contas
                     </CardDescription>
                   </CardHeader>
                 </Card>
 
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/client/statement')}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/master/transactions')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <History className="h-5 w-5 text-blue-600" />
-                      Extrato
+                      <BarChart3 className="h-5 w-5 text-purple-600" />
+                      Histórico Global
                     </CardTitle>
                     <CardDescription>
-                      Ver histórico de transações
+                      Ver todas as transações
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -264,13 +239,13 @@ const Dashboard: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <History className="h-5 w-5" />
+                      <Activity className="h-5 w-5" />
                       Transações Recentes (30 dias)
                     </span>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => navigate('/client/statement')}
+                      onClick={() => navigate('/master/transactions')}
                     >
                       Ver todas
                     </Button>
@@ -283,17 +258,30 @@ const Dashboard: React.FC = () => {
                         <div key={transaction.id} className="group relative overflow-hidden rounded-xl border bg-card/50 p-4 transition-all hover:bg-card/80 hover:shadow-sm">
                           <div className="flex items-start justify-between">
                             <div className="flex items-start gap-4">
-                              <div className={`relative flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 ${getIconBgColor(transaction)}`}>
+                              <div className={`relative flex h-10 w-10 items-center justify-center rounded-full shadow-sm ring-1 ${
+                                transaction.type === 'DEPOSITO' 
+                                  ? 'bg-green-50 ring-green-200' 
+                                  : transaction.status === 'PROCESSADO' 
+                                    ? 'bg-red-50 ring-red-200' 
+                                    : transaction.status === 'PENDENTE'
+                                      ? 'bg-yellow-50 ring-yellow-200'
+                                      : 'bg-gray-50 ring-gray-200'
+                              }`}>
                                 {transaction.type === 'DEPOSITO' ? (
-                                  <TrendingUp className={`h-5 w-5 ${getIconColor(transaction)}`} />
+                                  <TrendingUp className={`h-5 w-5 ${
+                                    transaction.type === 'DEPOSITO' ? 'text-green-600' : 'text-red-600'
+                                  }`} />
                                 ) : (
-                                  <TrendingDown className={`h-5 w-5 ${getIconColor(transaction)}`} />
+                                  <Activity className={`h-5 w-5 ${
+                                    transaction.status === 'PROCESSADO' ? 'text-red-600' : 
+                                    transaction.status === 'PENDENTE' ? 'text-yellow-600' : 'text-gray-600'
+                                  }`} />
                                 )}
                               </div>
                               <div className="flex-1 space-y-1">
                                 <div className="flex items-center gap-2">
                                   <p className="font-semibold text-foreground">
-                                    {transaction.type === 'DEPOSITO' ? 'Depósito' : 'Saque'}
+                                    {transaction.user_name}
                                   </p>
                                   <Badge variant={
                                     transaction.status === 'PROCESSADO' ? 'default' :
@@ -306,11 +294,14 @@ const Dashboard: React.FC = () => {
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
-                                  {new Date(transaction.created_at).toLocaleDateString('pt-BR')} às {new Date(transaction.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                  {transaction.user_email}
                                 </p>
-                                {transaction.type === 'SAQUE' && transaction.withdrawal_details && (
+                                <p className="text-xs text-muted-foreground">
+                                  {transaction.type === 'DEPOSITO' ? 'Depósito' : 'Saque'} • {transaction.formatted_date}
+                                </p>
+                                {transaction.pix_type && transaction.pix_key && (
                                   <p className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md inline-block">
-                                    PIX {getPixTypeLabel(transaction.withdrawal_details.pix_type)}: {transaction.withdrawal_details.pix_key}
+                                    PIX {transaction.pix_type}: {transaction.pix_key}
                                   </p>
                                 )}
                               </div>
@@ -328,7 +319,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
-                      <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>Nenhuma transação encontrada</p>
                     </div>
                   )}

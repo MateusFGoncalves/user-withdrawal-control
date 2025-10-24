@@ -19,3 +19,8 @@ Router::addGroup('/client', function () {
     Router::get('/transactions/export-excel', 'App\Controller\Client\TransactionController@exportExcel');
 });
 
+// Grupo de rotas para administradores
+Router::addGroup('/master', function () {
+    Router::get('/transactions/stats', 'App\Controller\Master\TransactionController@getStats');
+    Router::get('/transactions/recent', 'App\Controller\Master\TransactionController@getRecentTransactions');
+});

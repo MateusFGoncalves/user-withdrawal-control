@@ -58,11 +58,15 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - ✅ **Notificações Toast**: Feedback visual para ações do usuário
 - ✅ **Interface Responsiva**: Design moderno com shadcn/ui
 
-### 👑 Perfil MASTER (Em desenvolvimento)
-- 🔄 Gestão de Clientes
-- 🔄 Gestão de Contas
-- 🔄 Histórico Global de Transações
-- 🔄 Total de Fundos do Banco
+### 👑 Perfil MASTER
+- ✅ **Dashboard Administrativo**: Painel com estatísticas em tempo real
+- ✅ **Total de Clientes**: Contagem de clientes cadastrados no sistema
+- ✅ **Total de Fundos**: Saldo total de todas as contas do banco
+- ✅ **Saques Agendados**: Total de saques pendentes de todos os usuários
+- ✅ **Transações Recentes**: Últimas 4 transações de todos os usuários
+- 🔄 Gestão de Clientes (em desenvolvimento)
+- 🔄 Gestão de Contas (em desenvolvimento)
+- 🔄 Histórico Global de Transações (em desenvolvimento)
 
 ### 🎨 Interface do Usuário
 - ✅ Página de login responsiva
@@ -160,20 +164,26 @@ POST /api/auth/login
 GET  /api/auth/me
 ```
 
-### 💰 Conta (Protegido)
+### 💰 Conta (Protegido - Cliente)
 ```http
-GET /api/account/balance     # Consultar saldo
-GET /api/account/info        # Informações da conta
+GET /api/client/account/balance     # Consultar saldo
+GET /api/client/account/info        # Informações da conta
 ```
 
-### 💸 Transações (Protegido)
+### 💸 Transações (Protegido - Cliente)
 ```http
-POST /api/transactions/deposit         # Realizar depósito
-POST /api/transactions/withdraw        # Realizar saque
-POST /api/transactions/cancel-scheduled # Cancelar saque agendado
-GET  /api/transactions/statement       # Consultar extrato
-GET  /api/transactions/export-excel    # Exportar extrato para Excel
-GET  /api/transactions/recent          # Transações recentes (dashboard)
+POST /api/client/transactions/deposit         # Realizar depósito
+POST /api/client/transactions/withdraw        # Realizar saque
+POST /api/client/transactions/cancel-scheduled # Cancelar saque agendado
+GET  /api/client/transactions/statement       # Consultar extrato
+GET  /api/client/transactions/export-excel    # Exportar extrato para Excel
+GET  /api/client/transactions/recent          # Transações recentes (dashboard)
+```
+
+### 👑 Administração (Protegido - Master)
+```http
+GET /api/master/transactions/stats    # Estatísticas administrativas
+GET /api/master/transactions/recent   # Transações recentes de todos os usuários
 ```
 
 ### 📝 Exemplos de Uso
@@ -185,61 +195,73 @@ curl -X POST http://localhost:8080/api/auth/login \
   -d '{"email": "cliente@exemplo.com", "password": "123456"}'
 ```
 
-#### **Consultar Saldo**
+#### **Consultar Saldo (Cliente)**
 ```bash
-curl -X GET http://localhost:8080/api/account/balance \
+curl -X GET http://localhost:8080/api/client/account/balance \
   -H "Authorization: Bearer [TOKEN]"
 ```
 
-#### **Realizar Depósito**
+#### **Realizar Depósito (Cliente)**
 ```bash
-curl -X POST http://localhost:8080/api/transactions/deposit \
+curl -X POST http://localhost:8080/api/client/transactions/deposit \
   -H "Authorization: Bearer [TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"amount": 500.00}'
 ```
 
-#### **Realizar Saque Imediato**
+#### **Realizar Saque Imediato (Cliente)**
 ```bash
-curl -X POST http://localhost:8080/api/transactions/withdraw \
+curl -X POST http://localhost:8080/api/client/transactions/withdraw \
   -H "Authorization: Bearer [TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"amount": 200.00, "pix_type": "EMAIL", "pix_key": "teste@exemplo.com"}'
 ```
 
-#### **Realizar Saque Agendado**
+#### **Realizar Saque Agendado (Cliente)**
 ```bash
-curl -X POST http://localhost:8080/api/transactions/withdraw \
+curl -X POST http://localhost:8080/api/client/transactions/withdraw \
   -H "Authorization: Bearer [TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"amount": 100.00, "pix_type": "EMAIL", "pix_key": "teste@exemplo.com", "scheduled_at": "2025-10-25 10:00:00"}'
 ```
 
-#### **Consultar Extrato**
+#### **Consultar Extrato (Cliente)**
 ```bash
-curl -X GET http://localhost:8080/api/transactions/statement \
+curl -X GET http://localhost:8080/api/client/transactions/statement \
   -H "Authorization: Bearer [TOKEN]"
 ```
 
-#### **Exportar Extrato para Excel**
+#### **Exportar Extrato para Excel (Cliente)**
 ```bash
-curl -X GET "http://localhost:8080/api/transactions/export-excel?type=all&status=all" \
+curl -X GET "http://localhost:8080/api/client/transactions/export-excel?type=all&status=all" \
   -H "Authorization: Bearer [TOKEN]" \
   -o extrato_transacoes.xlsx
 ```
 
-#### **Consultar Transações Recentes**
+#### **Consultar Transações Recentes (Cliente)**
 ```bash
-curl -X GET "http://localhost:8080/api/transactions/recent?limit=5&days=30" \
+curl -X GET "http://localhost:8080/api/client/transactions/recent?limit=4&days=30" \
   -H "Authorization: Bearer [TOKEN]"
 ```
 
-#### **Cancelar Saque Agendado**
+#### **Cancelar Saque Agendado (Cliente)**
 ```bash
-curl -X POST http://localhost:8080/api/transactions/cancel-scheduled \
+curl -X POST http://localhost:8080/api/client/transactions/cancel-scheduled \
   -H "Authorization: Bearer [TOKEN]" \
   -H "Content-Type: application/json" \
   -d '{"transaction_id": 123}'
+```
+
+#### **Consultar Estatísticas Administrativas (Master)**
+```bash
+curl -X GET http://localhost:8080/api/master/transactions/stats \
+  -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Consultar Transações Recentes (Master)**
+```bash
+curl -X GET "http://localhost:8080/api/master/transactions/recent?limit=4&days=30" \
+  -H "Authorization: Bearer [TOKEN]"
 ```
 
 ## 📋 Regras de Negócio
@@ -319,9 +341,12 @@ user-withdrawal-control/
 │   ├── app/
 │   │   ├── Controller/      # Controladores da API
 │   │   │   ├── AuthController.php      # Autenticação
-│   │   │   ├── AccountController.php   # Operações de conta
-│   │   │   ├── TransactionController.php # Depósitos e saques
-│   │   │   └── DashboardController.php # Dashboard
+│   │   │   ├── AbstractController.php  # Controller base
+│   │   │   ├── Client/                 # Controladores do cliente
+│   │   │   │   ├── AccountController.php   # Operações de conta
+│   │   │   │   └── TransactionController.php # Depósitos e saques
+│   │   │   └── Master/                 # Controladores do master
+│   │   │       └── TransactionController.php # Dashboard e estatísticas
 │   │   └── Model/          # Modelos de dados
 │   │       ├── User.php                # Usuários
 │   │       ├── Account.php             # Contas digitais
@@ -366,12 +391,14 @@ user-withdrawal-control/
 │   │   ├── pages/          # Páginas da aplicação
 │   │   │   ├── Login.tsx              # Página de login
 │   │   │   ├── Register.tsx           # Página de cadastro
-│   │   │   ├── Dashboard.tsx          # Dashboard principal
-│   │   │   ├── ClientDashboard.tsx    # Dashboard do cliente
-│   │   │   ├── AdminDashboard.tsx     # Dashboard do admin
-│   │   │   ├── DepositPage.tsx        # Página de depósito
-│   │   │   ├── WithdrawPage.tsx       # Página de saque
-│   │   │   └── StatementPage.tsx      # Página de extrato
+│   │   │   ├── DashboardRouter.tsx    # Roteador de dashboards
+│   │   │   ├── Client/                # Páginas do cliente
+│   │   │   │   ├── Dashboard.tsx      # Dashboard do cliente
+│   │   │   │   ├── DepositPage.tsx    # Página de depósito
+│   │   │   │   ├── WithdrawPage.tsx   # Página de saque
+│   │   │   │   └── StatementPage.tsx  # Página de extrato
+│   │   │   └── Master/                # Páginas do master
+│   │   │       └── Dashboard.tsx      # Dashboard administrativo
 │   │   ├── hooks/          # Hooks customizados
 │   │   │   ├── useAuth.ts             # Hook de autenticação
 │   │   │   └── useExport.ts           # Hook de exportação
@@ -392,6 +419,31 @@ user-withdrawal-control/
 └── README.md
 ```
 
+## 🆕 Melhorias Recentes
+
+### ✨ Dashboard Master Implementado
+- **Estatísticas em tempo real**: Total de clientes, fundos e saques agendados
+- **Transações recentes**: Últimas 4 transações de todos os usuários
+- **Interface consistente**: Mesmo padrão visual do dashboard do cliente
+- **Navegação otimizada**: Prefixos /client e /master para organização
+
+### 🔧 Refatoração da Arquitetura
+- **Separação de controladores**: Client/ e Master/ para melhor organização
+- **AbstractController**: Centralização da lógica comum (getUserFromToken)
+- **Rotas organizadas**: Prefixos consistentes em todas as rotas
+- **Estrutura de pastas**: Frontend organizado por tipo de usuário
+
+### 🐛 Correções de Navegação
+- **Loop infinito resolvido**: Substituição de window.location.href por navigate()
+- **Redirecionamentos consistentes**: Uso do React Router em toda aplicação
+- **Navegação com replace**: Evita acúmulo desnecessário no histórico
+
+### 📊 Funcionalidades do Dashboard Master
+- **Total de Clientes**: Contagem de usuários CLIENTE cadastrados
+- **Total de Fundos**: Soma de todos os saldos das contas
+- **Saques Agendados**: Total de saques pendentes de todos os usuários
+- **Transações Recentes**: Visualização das últimas 4 transações do sistema
+
 ## 🚀 Status do Projeto
 
 ### ✅ Implementado (Perfil CLIENTE)
@@ -403,7 +455,7 @@ user-withdrawal-control/
 - **Cancelamento de saques agendados** com confirmação
 - **Extrato completo** com filtros e paginação
 - **Exportação Excel** com PhpSpreadsheet
-- **Transações recentes** no dashboard
+- **Transações recentes** no dashboard (4 transações)
 - **Suporte PIX** (EMAIL, PHONE, CPF, RANDOM)
 - **Máscara monetária** para valores em reais
 - **Notificações toast** para feedback
@@ -413,13 +465,22 @@ user-withdrawal-control/
 - **Migrations e seeders** automatizados
 - **API REST completa** documentada
 - **Lógica centralizada** no modelo Account
+- **Navegação consistente** com prefixos /client
+
+### ✅ Implementado (Perfil MASTER)
+- **Dashboard administrativo** com estatísticas em tempo real
+- **Total de clientes** cadastrados no sistema
+- **Total de fundos** de todas as contas
+- **Total de saques agendados** de todos os usuários
+- **Transações recentes** de todos os usuários (4 transações)
+- **Interface consistente** com o dashboard do cliente
+- **Navegação consistente** com prefixos /master
+- **API REST** para dados administrativos
 
 ### 🔄 Em Desenvolvimento (Perfil MASTER)
 - Gestão de clientes
 - Gestão de contas
 - Histórico global de transações
-- Total de fundos do banco
-- Dashboard administrativo
 
 ### 📋 Próximas Funcionalidades
 - **CRON Job** para processar saques agendados automaticamente
@@ -544,17 +605,21 @@ CREATE TABLE withdrawal_details (
 - `POST /api/auth/login` - Login de usuário
 - `GET /api/auth/me` - Informações do usuário autenticado
 
-### 💰 Conta (Protegido)
-- `GET /api/account/balance` - Consultar saldo da conta
-- `GET /api/account/info` - Informações completas da conta
+### 💰 Conta (Protegido - Cliente)
+- `GET /api/client/account/balance` - Consultar saldo da conta
+- `GET /api/client/account/info` - Informações completas da conta
 
-### 💸 Transações (Protegido)
-- `POST /api/transactions/deposit` - Realizar depósito
-- `POST /api/transactions/withdraw` - Realizar saque (imediato/agendado)
-- `GET /api/transactions/statement` - Consultar extrato
+### 💸 Transações (Protegido - Cliente)
+- `POST /api/client/transactions/deposit` - Realizar depósito
+- `POST /api/client/transactions/withdraw` - Realizar saque (imediato/agendado)
+- `POST /api/client/transactions/cancel-scheduled` - Cancelar saque agendado
+- `GET /api/client/transactions/statement` - Consultar extrato
+- `GET /api/client/transactions/export-excel` - Exportar extrato para Excel
+- `GET /api/client/transactions/recent` - Transações recentes (dashboard)
 
-### 📊 Dashboard
-- `GET /api/dashboard` - Dados do dashboard
+### 👑 Administração (Protegido - Master)
+- `GET /api/master/transactions/stats` - Estatísticas administrativas
+- `GET /api/master/transactions/recent` - Transações recentes de todos os usuários
 
 ## 🎨 Design System
 
@@ -683,9 +748,11 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 11 endpoints implementados e testados
+- **API**: 13 endpoints implementados e testados (7 cliente + 2 master + 3 auth)
 - **Componentes**: 15+ componentes shadcn/ui customizados
 - **Hooks**: 2 hooks customizados (useAuth, useExport)
+- **Arquitetura**: Separação por tipos de usuário (Client/Master)
+- **Navegação**: Prefixos consistentes (/client e /master)
 
 ---
 

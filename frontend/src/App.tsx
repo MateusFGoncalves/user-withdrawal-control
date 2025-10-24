@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Client/Dashboard';
+import MasterDashboard from './pages/Master/Dashboard';
 import DepositPage from './pages/Client/DepositPage';
 import WithdrawPage from './pages/Client/WithdrawPage';
 import StatementPage from './pages/Client/StatementPage';
@@ -69,6 +70,17 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Rotas protegidas para administradores */}
+            <Route 
+              path="/master/dashboard" 
+              element={
+                <ProtectedRoute allowedUserTypes={['MASTER']}>
+                  <MasterDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Redirecionamento padrão */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
