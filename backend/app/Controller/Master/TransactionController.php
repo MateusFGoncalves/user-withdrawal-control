@@ -33,8 +33,14 @@ class TransactionController extends AbstractController
             $totalClients = User::where('user_type', 'CLIENTE')->count();
             $totalTransactions = Transaction::count();
             
-            // Calcular total de fundos (soma de todos os saldos)
-            $totalFunds = Account::sum('balance');
+            // Calcular total de fundos (saldo líquido baseado em transações)
+            $totalDeposits = Transaction::where('type', 'DEPOSITO')
+                ->where('status', 'PROCESSADO')
+                ->sum('amount');
+            $totalWithdrawals = Transaction::where('type', 'SAQUE')
+                ->where('status', 'PROCESSADO')
+                ->sum('amount');
+            $totalFunds = $totalDeposits - $totalWithdrawals;
             
             // Calcular total de saques agendados (soma de todos os saques pendentes)
             $totalScheduledWithdrawals = Transaction::where('type', 'SAQUE')
