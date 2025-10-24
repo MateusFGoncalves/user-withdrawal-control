@@ -305,14 +305,20 @@ const StatementPage: React.FC = () => {
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="space-y-6">
               {/* Header */}
-              <div>
-                <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                  <History className="h-8 w-8 text-blue-600" />
-                  Extrato de Transações
-                </h1>
-                <p className="text-muted-foreground">
-                  Histórico completo de suas movimentações financeiras
-                </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                    <History className="h-8 w-8 text-blue-600" />
+                    Extrato de Transações
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Histórico completo de suas movimentações financeiras
+                  </p>
+                </div>
+                <Button onClick={handleExportClick} className="flex items-center gap-2" disabled={isExporting || transactions.length === 0}>
+                  <Download className="h-4 w-4" />
+                  Exportar Excel
+                </Button>
               </div>
 
               {/* Saldo e Saques Agendados */}
@@ -421,18 +427,7 @@ const StatementPage: React.FC = () => {
               {/* Lista de Transações */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Transações ({transactions.length})</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleExportClick}
-                      disabled={isExporting || transactions.length === 0}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      {isExporting ? 'Exportando...' : 'Exportar'}
-                    </Button>
-                  </CardTitle>
+                  <CardTitle>Transações</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {transactions.length > 0 ? (
