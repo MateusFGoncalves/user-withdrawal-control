@@ -51,6 +51,53 @@ class Account extends Model
 
     public function hasSufficientBalance(float $amount): bool
     {
-        return $this->balance >= $amount;
+        return $this->getAvailableBalance() >= $amount;
+    }
+
+    /**
+     * Calcula o saldo total da conta
+     */
+    public function getTotalBalance(): float
+    {
+        return floatval($this->balance);
+    }
+
+    /**
+     * Calcula o valor total de saques agendados pendentes
+     */
+    public function getScheduledWithdrawals(): float
+    {
+        return floatval(\App\Model\Transaction::where('user_id', $this->user_id)
+            ->where('type', 'SAQUE')
+            ->where('status', 'PENDENTE')
+            ->where('scheduled_at', '>', date('Y-m-d H:i:s'))
+            ->sum('amount'));
+    }
+
+    /**
+     * Calcula o saldo disponível (total - saques agendados)
+     */
+    public function getAvailableBalance(): float
+    {
+        return $this->getTotalBalance() - $this->getScheduledWithdrawals();
+    }
+
+    /**
+     * Retorna dados completos de saldo formatados
+     */
+    public function getBalanceData(): array
+    {
+        $totalBalance = $this->getTotalBalance();
+        $scheduledWithdrawals = $this->getScheduledWithdrawals();
+        $availableBalance = $this->getAvailableBalance();
+
+        return [
+            'balance' => $availableBalance, // Saldo disponível
+            'formatted_balance' => 'R$ ' . number_format($availableBalance, 2, ',', '.'),
+            'total_balance' => $totalBalance,
+            'formatted_total_balance' => 'R$ ' . number_format($totalBalance, 2, ',', '.'),
+            'scheduled_withdrawals' => $scheduledWithdrawals,
+            'formatted_scheduled_withdrawals' => 'R$ ' . number_format($scheduledWithdrawals, 2, ',', '.'),
+        ];
     }
 }

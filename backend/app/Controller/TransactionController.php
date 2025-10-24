@@ -71,6 +71,7 @@ class TransactionController
                         'id' => $transaction->id,
                         'type' => $transaction->type,
                         'amount' => $transaction->amount,
+                        'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                         'status' => $transaction->status,
                         'processed_at' => $transaction->processed_at,
                     ],
@@ -130,18 +131,25 @@ class TransactionController
             $isScheduled = !empty($scheduledAt);
             
             if ($isScheduled) {
-                $scheduledDate = new \DateTime($scheduledAt);
-                $now = new \DateTime();
-                $maxDate = (new \DateTime())->modify('+7 days');
+                // Configurar fuso horário do Brasil
+                $timezone = new \DateTimeZone('America/Sao_Paulo');
+                $scheduledDate = new \DateTime($scheduledAt, $timezone);
+                $now = new \DateTime('now', $timezone);
+                $maxDate = (new \DateTime('now', $timezone))->modify('+7 days');
 
-                if ($scheduledDate <= $now) {
+                // Comparar apenas as datas (sem horário)
+                $scheduledDateOnly = $scheduledDate->format('Y-m-d');
+                $nowDateOnly = $now->format('Y-m-d');
+                $maxDateOnly = $maxDate->format('Y-m-d');
+
+                if ($scheduledDateOnly <= $nowDateOnly) {
                     return $response->json([
                         'success' => false,
                         'message' => 'Data de agendamento deve ser futura',
                     ])->withStatus(400);
                 }
 
-                if ($scheduledDate > $maxDate) {
+                if ($scheduledDateOnly > $maxDateOnly) {
                     return $response->json([
                         'success' => false,
                         'message' => 'Agendamento limitado a 7 dias',
@@ -188,6 +196,7 @@ class TransactionController
                         'id' => $transaction->id,
                         'type' => $transaction->type,
                         'amount' => $transaction->amount,
+                        'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                         'status' => $transaction->status,
                         'scheduled_at' => $transaction->scheduled_at,
                         'processed_at' => $transaction->processed_at,
@@ -221,13 +230,38 @@ class TransactionController
                 ])->withStatus(401);
             }
 
-            // Buscar transações simples
-            $transactions = Transaction::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
+            // Parâmetros de paginação
+            $page = (int) $request->input('page', 1);
+            $perPage = (int) $request->input('per_page', 10);
+            $type = $request->input('type', 'all');
+            $status = $request->input('status', 'all');
+
+            // Construir query base
+            $query = Transaction::where('user_id', $user->id)
+                ->with('withdrawalDetails');
+
+            // Aplicar filtros
+            if ($type !== 'all') {
+                $query->where('type', $type);
+            }
+
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+
+            // Ordenar por data de criação (mais recentes primeiro)
+            $query->orderBy('created_at', 'desc');
+
+            // Contar total de registros
+            $total = $query->count();
+
+            // Aplicar paginação
+            $transactions = $query->skip(($page - 1) * $perPage)
+                ->take($perPage)
                 ->get();
 
             $formattedTransactions = $transactions->map(function ($transaction) {
-                return [
+                $formattedTransaction = [
                     'id' => $transaction->id,
                     'type' => $transaction->type,
                     'amount' => $transaction->amount,
@@ -237,12 +271,170 @@ class TransactionController
                     'scheduled_at' => $transaction->scheduled_at,
                     'processed_at' => $transaction->processed_at,
                 ];
+
+                // Adicionar withdrawal_details se existir
+                if ($transaction->withdrawalDetails) {
+                    $formattedTransaction['withdrawal_details'] = [
+                        'pix_type' => $transaction->withdrawalDetails->pix_type,
+                        'pix_key' => $transaction->withdrawalDetails->pix_key,
+                    ];
+                }
+
+                return $formattedTransaction;
+            });
+
+            // Calcular informações de paginação
+            $totalPages = ceil($total / $perPage);
+            $hasNextPage = $page < $totalPages;
+            $hasPrevPage = $page > 1;
+
+            return $response->json([
+                'success' => true,
+                'data' => [
+                    'transactions' => $formattedTransactions,
+                    'pagination' => [
+                        'current_page' => $page,
+                        'per_page' => $perPage,
+                        'total' => $total,
+                        'total_pages' => $totalPages,
+                        'has_next_page' => $hasNextPage,
+                        'has_prev_page' => $hasPrevPage,
+                        'next_page' => $hasNextPage ? $page + 1 : null,
+                        'prev_page' => $hasPrevPage ? $page - 1 : null,
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+
+    public function getRecentTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            $user = $this->getUserFromToken($request);
+            if (!$user) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Token inválido ou expirado',
+                ])->withStatus(401);
+            }
+
+            // Parâmetros
+            $limit = (int) $request->input('limit', 5);
+            $days = (int) $request->input('days', 30); // Últimos 30 dias por padrão
+
+            // Calcular data limite
+            $dateLimit = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+
+            // Buscar transações recentes
+            $transactions = Transaction::where('user_id', $user->id)
+                ->where('created_at', '>=', $dateLimit)
+                ->with('withdrawalDetails')
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            $formattedTransactions = $transactions->map(function ($transaction) {
+                $formattedTransaction = [
+                    'id' => $transaction->id,
+                    'type' => $transaction->type,
+                    'amount' => $transaction->amount,
+                    'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
+                    'status' => $transaction->status,
+                    'created_at' => $transaction->created_at,
+                    'scheduled_at' => $transaction->scheduled_at,
+                    'processed_at' => $transaction->processed_at,
+                ];
+
+                // Adicionar withdrawal_details se existir
+                if ($transaction->withdrawalDetails) {
+                    $formattedTransaction['withdrawal_details'] = [
+                        'pix_type' => $transaction->withdrawalDetails->pix_type,
+                        'pix_key' => $transaction->withdrawalDetails->pix_key,
+                    ];
+                }
+
+                return $formattedTransaction;
             });
 
             return $response->json([
                 'success' => true,
                 'data' => [
                     'transactions' => $formattedTransactions,
+                    'period' => "Últimos {$days} dias",
+                    'total_found' => $transactions->count(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+
+    public function cancelScheduledWithdrawal(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            $user = $this->getUserFromToken($request);
+            if (!$user) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Token inválido ou expirado',
+                ])->withStatus(401);
+            }
+
+            $transactionId = (int) $request->input('transaction_id');
+            
+            if (!$transactionId) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'ID da transação é obrigatório',
+                ])->withStatus(400);
+            }
+
+            // Buscar a transação
+            $transaction = Transaction::where('id', $transactionId)
+                ->where('user_id', $user->id)
+                ->where('type', 'SAQUE')
+                ->where('status', 'PENDENTE')
+                ->first();
+
+            if (!$transaction) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Saque agendado não encontrado ou já processado',
+                ])->withStatus(404);
+            }
+
+            // Verificar se ainda é possível cancelar (não processado)
+            if ($transaction->status !== 'PENDENTE') {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Este saque já foi processado e não pode ser cancelado',
+                ])->withStatus(400);
+            }
+
+            // Atualizar status para cancelado
+            $transaction->update([
+                'status' => 'CANCELADO',
+                'processed_at' => date('Y-m-d H:i:s'),
+                'failure_reason' => 'Cancelado pelo usuário',
+            ]);
+
+            return $response->json([
+                'success' => true,
+                'message' => 'Saque agendado cancelado com sucesso',
+                'data' => [
+                    'transaction' => [
+                        'id' => $transaction->id,
+                        'status' => $transaction->status,
+                        'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
+                    ],
                 ],
             ]);
         } catch (\Exception $e) {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -42,7 +44,16 @@ const Login: React.FC = () => {
 
       if (data.success) {
         localStorage.setItem('token', data.data.token);
-        window.location.href = '/dashboard';
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        
+        // Redirecionar baseado no tipo de usuário
+        if (data.data.user.user_type === 'CLIENTE') {
+          navigate('/dashboard');
+        } else if (data.data.user.user_type === 'MASTER') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(data.message || 'Erro ao fazer login');
       }

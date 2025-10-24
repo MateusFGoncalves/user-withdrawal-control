@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Model\Account;
 use App\Model\User;
+use App\Model\Transaction;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Hyperf\HttpServer\Contract\RequestInterface;
@@ -38,14 +39,9 @@ class AccountController
                 ])->withStatus(404);
             }
 
-            $balance = floatval($account->balance);
-            
             return $response->json([
                 'success' => true,
-                'data' => [
-                    'balance' => $balance,
-                    'formatted_balance' => 'R$ ' . number_format($balance, 2, ',', '.'),
-                ],
+                'data' => $account->getBalanceData(),
             ]);
         } catch (\Exception $e) {
             return $response->json([
@@ -74,6 +70,8 @@ class AccountController
                 ])->withStatus(404);
             }
 
+            $balanceData = $account->getBalanceData();
+
             return $response->json([
                 'success' => true,
                 'data' => [
@@ -83,12 +81,10 @@ class AccountController
                         'email' => $user->email,
                         'user_type' => $user->user_type,
                     ],
-                    'account' => [
+                    'account' => array_merge([
                         'id' => $account->id,
-                        'balance' => (float) $account->balance,
-                        'formatted_balance' => 'R$ ' . number_format((float) $account->balance, 2, ',', '.'),
                         'created_at' => $account->created_at,
-                    ],
+                    ], $balanceData),
                 ],
             ]);
         } catch (\Exception $e) {

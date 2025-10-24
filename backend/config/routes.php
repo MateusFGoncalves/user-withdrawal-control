@@ -17,6 +17,8 @@ Router::get('/account/info', 'App\Controller\AccountController@getAccountInfo');
 Router::post('/transactions/deposit', 'App\Controller\TransactionController@deposit');
 Router::post('/transactions/withdraw', 'App\Controller\TransactionController@withdraw');
 Router::get('/transactions/statement', 'App\Controller\TransactionController@getStatement');
+Router::get('/transactions/recent', 'App\Controller\TransactionController@getRecentTransactions');
+Router::post('/transactions/cancel-scheduled', 'App\Controller\TransactionController@cancelScheduledWithdrawal');
 
 // Rotas protegidas
 Router::get('/dashboard', 'App\Controller\DashboardController@index');

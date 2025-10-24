@@ -47,6 +47,7 @@ class AuthController
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
+                        'user_type' => $user->user_type,
                     ],
                     'token' => $token,
                 ],
@@ -81,6 +82,7 @@ class AuthController
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
+                        'user_type' => $user->user_type,
                     ],
                     'token' => $token,
                 ],
@@ -124,6 +126,7 @@ class AuthController
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
+                        'user_type' => $user->user_type,
                     ],
                 ],
             ]);

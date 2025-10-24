@@ -9,12 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { ThemeToggle } from '../theme-toggle';
+import { useAuth } from '../../hooks/useAuth';
 import { 
   Bell, 
   Menu,
   UserIcon,
   User,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -22,6 +24,12 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
+  };
   return (
     <header className="bg-card border-b border-border h-16 flex items-center justify-between px-6">
       <div className="flex items-center">
@@ -47,15 +55,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                 <UserIcon className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-sm font-medium">Usuário</span>
+              <span className="text-sm font-medium">{user?.name || 'Usuário'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Usuário</p>
+                <p className="text-sm font-medium leading-none">{user?.name || 'Usuário'}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  usuario@exemplo.com
+                  {user?.email || 'usuario@exemplo.com'}
+                </p>
+                <p className="text-xs text-primary font-medium">
+                  {user?.user_type === 'CLIENTE' ? 'Cliente' : 'Administrador'}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -66,10 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => {
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-              }}
+              onClick={handleLogout}
               className="text-red-600 focus:text-red-600"
             >
               <LogOut className="mr-2 h-4 w-4" />

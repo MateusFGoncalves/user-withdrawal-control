@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,6 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,6 +50,7 @@ const Register: React.FC = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          user_type: 'CLIENTE', // Por padrão, novos usuários são clientes
         }),
       });
 
@@ -55,7 +58,7 @@ const Register: React.FC = () => {
 
       if (data.success) {
         localStorage.setItem('token', data.data.token);
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
       } else {
         setError(data.message || 'Erro ao criar conta');
       }
