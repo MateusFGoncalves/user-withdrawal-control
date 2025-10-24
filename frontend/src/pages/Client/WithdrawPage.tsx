@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Navbar } from '../components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { InputGroup, InputGroupPrefix, InputGroupInput } from '../components/ui/input-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { DatePicker } from '../components/ui/date-picker';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Navbar } from '../../components/layout/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { InputGroup, InputGroupPrefix, InputGroupInput } from '../../components/ui/input-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { DatePicker } from '../../components/ui/date-picker';
 import toast from 'react-hot-toast';
 import { ArrowDownLeft, CreditCard, Clock, DollarSign } from 'lucide-react';
-import { getApiUrl } from '../utils/api';
-import { useAuth } from '../hooks/useAuth';
-import { formatCurrency, parseCurrency } from '../helpers/currency';
+import { getApiUrl } from '../../utils/api';
+import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency, parseCurrency } from '../../helpers/currency';
 
 interface AccountData {
   balance: number;
@@ -47,7 +47,7 @@ const WithdrawPage: React.FC = () => {
   const fetchBalance = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl('/account/balance'), {
+      const response = await fetch(getApiUrl('/client/account/balance'), {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -115,7 +115,7 @@ const WithdrawPage: React.FC = () => {
         requestData.scheduled_at = formData.scheduledAt.toISOString().split('T')[0];
       }
 
-      const response = await fetch(getApiUrl('/transactions/withdraw'), {
+      const response = await fetch(getApiUrl('/client/transactions/withdraw'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

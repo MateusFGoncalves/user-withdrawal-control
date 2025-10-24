@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Navbar } from '../components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Pagination } from '../components/ui/pagination';
-import { ConfirmationModal } from '../components/ui/confirmation-modal';
-import { ExportModal } from '../components/ui/export-modal';
-import { useExport } from '../hooks/useExport';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Navbar } from '../../components/layout/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Pagination } from '../../components/ui/pagination';
+import { ConfirmationModal } from '../../components/ui/confirmation-modal';
+import { ExportModal } from '../../components/ui/export-modal';
+import { useExport } from '../../hooks/useExport';
 import { 
   History, 
   TrendingUp, 
@@ -20,8 +20,8 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
-import { apiClient } from '../utils/apiClient';
-import { useAuth } from '../hooks/useAuth';
+import { apiClient } from '../../utils/apiClient';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 interface AccountData {
@@ -88,7 +88,7 @@ const StatementPage: React.FC = () => {
   const fetchBalance = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.get('/account/balance', {
+      const response = await apiClient.get('/client/account/balance', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -112,7 +112,7 @@ const StatementPage: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await apiClient.get(`/transactions/statement?page=${currentPage}&per_page=10&type=${filters.type}&status=${filters.status}`, {
+      const response = await apiClient.get(`/client/transactions/statement?page=${currentPage}&per_page=10&type=${filters.type}&status=${filters.status}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -198,7 +198,7 @@ const StatementPage: React.FC = () => {
     setIsCancelling(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.post('/transactions/cancel-scheduled', {
+      const response = await apiClient.post('/client/transactions/cancel-scheduled', {
         transaction_id: transactionToCancel.id,
       }, {
         headers: {

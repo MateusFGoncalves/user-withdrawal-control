@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Navbar } from '../components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Navbar } from '../../components/layout/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -15,8 +15,8 @@ import {
   History,
   Clock
 } from 'lucide-react';
-import { apiClient } from '../utils/apiClient';
-import { useAuth } from '../hooks/useAuth';
+import { apiClient } from '../../utils/apiClient';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 interface AccountData {
@@ -60,7 +60,7 @@ const ClientDashboard: React.FC = () => {
   const fetchAccountData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.get('/account/balance', {
+      const response = await apiClient.get('/client/account/balance', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -83,7 +83,7 @@ const ClientDashboard: React.FC = () => {
   const fetchRecentTransactions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.get('/transactions/recent?limit=4&days=30', {
+      const response = await apiClient.get('/client/transactions/recent?limit=4&days=30', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Navbar } from '../components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { InputGroup, InputGroupPrefix, InputGroupInput } from '../components/ui/input-group';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Navbar } from '../../components/layout/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { InputGroup, InputGroupPrefix, InputGroupInput } from '../../components/ui/input-group';
 import toast from 'react-hot-toast';
 import { ArrowUpRight, DollarSign, Clock } from 'lucide-react';
-import { apiClient } from '../utils/apiClient';
-import { useAuth } from '../hooks/useAuth';
-import { formatCurrency, parseCurrency } from '../helpers/currency';
+import { apiClient } from '../../utils/apiClient';
+import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency, parseCurrency } from '../../helpers/currency';
 
 interface AccountData {
   balance: number;
@@ -38,7 +38,7 @@ const DepositPage: React.FC = () => {
   const fetchBalance = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.get('/account/balance', {
+      const response = await apiClient.get('/client/account/balance', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -78,7 +78,7 @@ const DepositPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await apiClient.post('/transactions/deposit', {
+      const response = await apiClient.post('/client/transactions/deposit', {
         amount: depositAmount,
       }, {
         headers: {
