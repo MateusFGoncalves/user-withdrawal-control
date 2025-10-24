@@ -95,7 +95,7 @@ const DepositPage: React.FC = () => {
         fetchBalance();
         // Redirecionar após 2 segundos
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate('/client/dashboard');
         }, 2000);
       } else {
         toast.error(data.message || 'Erro ao realizar depósito. Tente novamente.');

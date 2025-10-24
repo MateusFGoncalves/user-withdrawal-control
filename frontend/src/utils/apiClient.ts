@@ -1,10 +1,10 @@
 import { getApiUrl } from './api';
 
-// Função para fazer logout e redirecionar
+// Função para fazer logout (sem redirecionamento automático)
 const handleUnauthorized = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
+  // O redirecionamento será feito pelo useAuth hook
 };
 
 // Interceptor para capturar erros 401
