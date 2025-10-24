@@ -19,6 +19,7 @@ Router::post('/transactions/withdraw', 'App\Controller\TransactionController@wit
 Router::get('/transactions/statement', 'App\Controller\TransactionController@getStatement');
 Router::get('/transactions/recent', 'App\Controller\TransactionController@getRecentTransactions');
 Router::post('/transactions/cancel-scheduled', 'App\Controller\TransactionController@cancelScheduledWithdrawal');
+Router::get('/transactions/export-excel', 'App\Controller\TransactionController@exportExcel');
 
 // Rotas protegidas
 Router::get('/dashboard', 'App\Controller\DashboardController@index');

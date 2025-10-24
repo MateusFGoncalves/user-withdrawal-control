@@ -14,6 +14,11 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Config\Annotation\Value;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class TransactionController
 {
@@ -443,6 +448,180 @@ class TransactionController
                 'message' => 'Erro interno do servidor: ' . $e->getMessage(),
             ])->withStatus(500);
         }
+    }
+
+    public function exportExcel(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            $user = $this->getUserFromToken($request);
+            if (!$user) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Token inválido ou expirado',
+                ])->withStatus(401);
+            }
+
+            // Parâmetros de filtro
+            $type = $request->input('type', 'all');
+            $status = $request->input('status', 'all');
+
+            // Construir query base
+            $query = Transaction::where('user_id', $user->id)
+                ->with('withdrawalDetails');
+
+            // Aplicar filtros
+            if ($type !== 'all') {
+                $query->where('type', $type);
+            }
+
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+
+            // Buscar todas as transações (sem paginação para Excel)
+            $transactions = $query->orderBy('created_at', 'desc')->get();
+
+            // Gerar arquivo Excel real
+            $filename = 'extrato_transacoes_' . date('Y-m-d_H-i-s') . '.xlsx';
+            
+            // Criar planilha Excel
+            $excelContent = $this->generateExcelFile($transactions, $user);
+
+            // Retornar arquivo Excel
+            return $response->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->withHeader('Cache-Control', 'no-cache, must-revalidate')
+                ->withHeader('Expires', '0')
+                ->withHeader('Content-Length', (string) strlen($excelContent))
+                ->raw($excelContent);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+
+    private function generateExcelFile($transactions, $user): string
+    {
+        // Criar nova planilha
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Definir nome da planilha
+        $sheet->setTitle('Extrato de Transações');
+        
+        // Cabeçalhos
+        $headers = [
+            'A1' => 'ID',
+            'B1' => 'Tipo',
+            'C1' => 'Valor',
+            'D1' => 'Status',
+            'E1' => 'Data Criação',
+            'F1' => 'Agendado para',
+            'G1' => 'Processado em',
+            'H1' => 'Tipo PIX',
+            'I1' => 'Chave PIX',
+            'J1' => 'Motivo da Falha'
+        ];
+        
+        // Definir cabeçalhos
+        foreach ($headers as $cell => $value) {
+            $sheet->setCellValue($cell, $value);
+        }
+        
+        // Estilizar cabeçalho
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '3B82F6']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ]
+        ];
+        
+        $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+        
+        // Dados das transações
+        $row = 2;
+        foreach ($transactions as $transaction) {
+            $sheet->setCellValue('A' . $row, $transaction->id);
+            $sheet->setCellValue('B' . $row, $transaction->type === 'DEPOSITO' ? 'Depósito' : 'Saque');
+            $sheet->setCellValue('C' . $row, 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'));
+            $sheet->setCellValue('D' . $row, $this->formatStatus($transaction->status));
+            $sheet->setCellValue('E' . $row, $this->formatDate($transaction->created_at));
+            $sheet->setCellValue('F' . $row, $this->formatDate($transaction->scheduled_at));
+            $sheet->setCellValue('G' . $row, $this->formatDate($transaction->processed_at));
+            $sheet->setCellValue('H' . $row, $this->formatPixType($transaction->withdrawalDetails?->pix_type));
+            $sheet->setCellValue('I' . $row, $transaction->withdrawalDetails?->pix_key ?? '-');
+            $sheet->setCellValue('J' . $row, $transaction->failure_reason ?? '-');
+            $row++;
+        }
+        
+        // Ajustar largura das colunas
+        $sheet->getColumnDimension('A')->setWidth(8);
+        $sheet->getColumnDimension('B')->setWidth(12);
+        $sheet->getColumnDimension('C')->setWidth(15);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(18);
+        $sheet->getColumnDimension('F')->setWidth(18);
+        $sheet->getColumnDimension('G')->setWidth(18);
+        $sheet->getColumnDimension('H')->setWidth(15);
+        $sheet->getColumnDimension('I')->setWidth(25);
+        $sheet->getColumnDimension('J')->setWidth(20);
+        
+        // Criar writer
+        $writer = new Xlsx($spreadsheet);
+        
+        // Salvar em arquivo temporário
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_export_');
+        $writer->save($tempFile);
+        
+        // Ler conteúdo do arquivo
+        $excelContent = file_get_contents($tempFile);
+        
+        // Remover arquivo temporário
+        unlink($tempFile);
+        
+        return $excelContent;
+    }
+
+    private function formatDate($date): string
+    {
+        if (!$date) return '-';
+        if (is_object($date)) {
+            return $date->format('d/m/Y H:i');
+        }
+        return date('d/m/Y H:i', strtotime($date));
+    }
+
+    private function formatPixType($type): string
+    {
+        if (!$type) return '-';
+        $types = [
+            'EMAIL' => 'E-mail',
+            'PHONE' => 'Telefone',
+            'CPF' => 'CPF',
+            'RANDOM' => 'Chave Aleatória'
+        ];
+        return $types[$type] ?? $type;
+    }
+
+    private function formatStatus($status): string
+    {
+        $statuses = [
+            'PENDENTE' => 'Pendente',
+            'PROCESSADO' => 'Processado',
+            'FALHOU' => 'Falhou',
+            'CANCELADO' => 'Cancelado'
+        ];
+        return $statuses[$status] ?? $status;
     }
 
     private function getUserFromToken(RequestInterface $request): ?User

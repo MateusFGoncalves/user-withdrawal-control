@@ -52,6 +52,7 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
   - Saque Agendado: Agendamento até 7 dias (não debita no momento)
   - Cancelamento de Saques Agendados: Cancelar saques pendentes
 - ✅ **Extrato**: Histórico completo de transações com filtros e paginação
+- ✅ **Exportação Excel**: Exportar extrato de transações em formato Excel
 - ✅ **Suporte PIX**: Saques via chave PIX (EMAIL, PHONE, CPF, RANDOM)
 - ✅ **Máscara Monetária**: Formatação automática de valores em reais
 - ✅ **Notificações Toast**: Feedback visual para ações do usuário
@@ -171,6 +172,7 @@ POST /api/transactions/deposit         # Realizar depósito
 POST /api/transactions/withdraw        # Realizar saque
 POST /api/transactions/cancel-scheduled # Cancelar saque agendado
 GET  /api/transactions/statement       # Consultar extrato
+GET  /api/transactions/export-excel    # Exportar extrato para Excel
 GET  /api/transactions/recent          # Transações recentes (dashboard)
 ```
 
@@ -217,6 +219,13 @@ curl -X POST http://localhost:8080/api/transactions/withdraw \
 ```bash
 curl -X GET http://localhost:8080/api/transactions/statement \
   -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Exportar Extrato para Excel**
+```bash
+curl -X GET "http://localhost:8080/api/transactions/export-excel?type=all&status=all" \
+  -H "Authorization: Bearer [TOKEN]" \
+  -o extrato_transacoes.xlsx
 ```
 
 #### **Consultar Transações Recentes**
@@ -346,7 +355,9 @@ user-withdrawal-control/
 │   │   │   │   ├── pagination.tsx     # Paginação
 │   │   │   │   ├── date-picker.tsx    # Seletor de data
 │   │   │   │   ├── input-group.tsx    # Grupo de input
-│   │   │   │   └── confirmation-modal.tsx # Modal de confirmação
+│   │   │   │   ├── confirmation-modal.tsx # Modal de confirmação
+│   │   │   │   ├── dialog.tsx         # Modal/Dialog
+│   │   │   │   └── export-modal.tsx   # Modal de exportação
 │   │   │   ├── layout/     # Componentes de layout
 │   │   │   │   ├── Sidebar.tsx        # Barra lateral
 │   │   │   │   └── Navbar.tsx         # Barra superior
@@ -363,9 +374,11 @@ user-withdrawal-control/
 │   │   │   └── StatementPage.tsx      # Página de extrato
 │   │   ├── hooks/          # Hooks customizados
 │   │   │   ├── useAuth.ts             # Hook de autenticação
-│   │   │   └── useMoneyMask.ts        # Hook de máscara monetária
+│   │   │   └── useExport.ts           # Hook de exportação
 │   │   ├── lib/            # Utilitários
 │   │   │   └── utils.ts               # Funções utilitárias
+│   │   ├── helpers/        # Helpers específicos
+│   │   │   └── currency.ts            # Formatação monetária
 │   │   ├── utils/          # Utilitários específicos
 │   │   │   └── api.ts                 # Configuração da API
 │   │   └── App.tsx         # Componente principal
@@ -389,6 +402,7 @@ user-withdrawal-control/
 - **Saques agendados** (até 7 dias)
 - **Cancelamento de saques agendados** com confirmação
 - **Extrato completo** com filtros e paginação
+- **Exportação Excel** com PhpSpreadsheet
 - **Transações recentes** no dashboard
 - **Suporte PIX** (EMAIL, PHONE, CPF, RANDOM)
 - **Máscara monetária** para valores em reais
@@ -573,6 +587,7 @@ O projeto utiliza o shadcn/ui como base para o design system, garantindo:
 - **Transações recentes** no dashboard
 - **Saldo disponível** vs saldo total
 - **Cancelamento de saques** com confirmação
+- **Exportação Excel** com formatação profissional
 
 #### **🎨 Sistema de Cores**
 - **Verde**: Depósitos processados
@@ -580,6 +595,33 @@ O projeto utiliza o shadcn/ui como base para o design system, garantindo:
 - **Amarelo**: Transações pendentes
 - **Cinza**: Transações canceladas
 - **Azul**: Informações de agendamento
+
+## 📊 Funcionalidade de Exportação Excel
+
+### ✨ Características
+- **Formato Excel real** (.xlsx) usando PhpSpreadsheet
+- **Filtros aplicados** - exporta apenas as transações filtradas
+- **Formatação profissional** com cabeçalhos estilizados
+- **Download automático** via XMLHttpRequest
+- **Validação de arquivo** para garantir integridade
+- **Interface modal** para seleção de formato
+
+### 🔧 Implementação Técnica
+- **Backend**: PhpSpreadsheet para geração de arquivos Excel
+- **Frontend**: XMLHttpRequest com responseType 'blob'
+- **Nginx**: Configuração otimizada para arquivos binários
+- **Validação**: Verificação de Content-Type e tamanho do arquivo
+
+### 📋 Dados Exportados
+- ID da transação
+- Tipo (Depósito/Saque)
+- Valor formatado em reais
+- Status da transação
+- Data de criação
+- Data de agendamento (se aplicável)
+- Data de processamento (se aplicável)
+- Tipo PIX e chave PIX
+- Motivo da falha (se aplicável)
 
 ## 🚀 Deploy
 
@@ -624,6 +666,7 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - ✅ **Saques agendados** para até 7 dias no futuro
 - ✅ **Cancelamento de saques agendados** com confirmação
 - ✅ **Extrato completo** com histórico de transações e paginação
+- ✅ **Exportação Excel** com PhpSpreadsheet
 - ✅ **Transações recentes** no dashboard
 - ✅ **Máscara monetária** para formatação de valores
 - ✅ **Notificações toast** para feedback do usuário
@@ -636,13 +679,13 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 
 ### 🚀 Tecnologias Utilizadas
 
-- **Backend**: PHP Hyperf 3 + MySQL + Redis + JWT + Doctrine DBAL
+- **Backend**: PHP Hyperf 3 + MySQL + Redis + JWT + Doctrine DBAL + PhpSpreadsheet
 - **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 10 endpoints implementados e testados
+- **API**: 11 endpoints implementados e testados
 - **Componentes**: 15+ componentes shadcn/ui customizados
-- **Hooks**: 2 hooks customizados (useAuth, useMoneyMask)
+- **Hooks**: 2 hooks customizados (useAuth, useExport)
 
 ---
 

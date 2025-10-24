@@ -8,6 +8,8 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Pagination } from '../components/ui/pagination';
 import { ConfirmationModal } from '../components/ui/confirmation-modal';
+import { ExportModal } from '../components/ui/export-modal';
+import { useExport } from '../hooks/useExport';
 import { 
   History, 
   TrendingUp, 
@@ -61,6 +63,7 @@ interface PaginationData {
 const StatementPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { exportToExcel } = useExport();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +78,8 @@ const StatementPage: React.FC = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [transactionToCancel, setTransactionToCancel] = useState<Transaction | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -226,6 +231,27 @@ const StatementPage: React.FC = () => {
   const closeCancelModal = () => {
     setShowCancelModal(false);
     setTransactionToCancel(null);
+  };
+
+  const handleExportClick = () => {
+    setShowExportModal(true);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportToExcel(filters);
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast.error('Erro ao exportar extrato');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const closeExportModal = () => {
+    setShowExportModal(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -397,9 +423,14 @@ const StatementPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>Transações ({transactions.length})</span>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleExportClick}
+                      disabled={isExporting || transactions.length === 0}
+                    >
                       <Download className="h-4 w-4 mr-2" />
-                      Exportar
+                      {isExporting ? 'Exportando...' : 'Exportar'}
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -512,6 +543,14 @@ const StatementPage: React.FC = () => {
         cancelText="Não, Manter"
         variant="destructive"
         isLoading={isCancelling}
+      />
+
+      {/* Modal de exportação */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={closeExportModal}
+        onExport={handleExport}
+        isLoading={isExporting}
       />
     </div>
   );
