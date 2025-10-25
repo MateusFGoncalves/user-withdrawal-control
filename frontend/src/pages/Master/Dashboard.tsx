@@ -10,7 +10,6 @@ import {
   DollarSign, 
   TrendingUp, 
   Activity,
-  CreditCard,
   BarChart3,
   Clock
 } from 'lucide-react';
@@ -196,7 +195,7 @@ const Dashboard: React.FC = () => {
               </div>
 
               {/* Ações Administrativas */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/master/clients')}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -205,18 +204,6 @@ const Dashboard: React.FC = () => {
                     </CardTitle>
                     <CardDescription>
                       Visualizar e gerenciar clientes
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-
-                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/master/accounts')}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <CreditCard className="h-5 w-5 text-green-600" />
-                      Gerenciar Contas
-                    </CardTitle>
-                    <CardDescription>
-                      Visualizar e gerenciar contas
                     </CardDescription>
                   </CardHeader>
                 </Card>
