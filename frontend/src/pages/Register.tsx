@@ -20,6 +20,7 @@ const Register: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,12 +28,21 @@ const Register: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Limpar erro do campo quando o usuário digitar
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setFieldErrors({});
 
     if (formData.password !== formData.confirmPassword) {
       setError('As senhas não coincidem');
@@ -58,9 +68,18 @@ const Register: React.FC = () => {
 
       if (data.success) {
         localStorage.setItem('token', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
         navigate('/client/dashboard');
       } else {
-        setError(data.message || 'Erro ao criar conta');
+        // Tratar erros de validação de campo
+        if (data.errors) {
+          setFieldErrors(data.errors);
+          // Se há erros de campo específicos, não mostrar erro geral
+          setError('');
+        } else {
+          // Apenas erros gerais (sem erros de campo específicos)
+          setError(data.message || 'Erro ao criar conta');
+        }
       }
     } catch (err) {
       setError('Erro de conexão. Tente novamente.');
@@ -89,8 +108,11 @@ const Register: React.FC = () => {
                 placeholder="Seu nome completo"
                 value={formData.name}
                 onChange={handleInputChange}
-                required
+                className={fieldErrors.password ? 'border-red-500' : ''}
               />
+              {fieldErrors.name && (
+                <p className="text-sm text-red-500">{fieldErrors.name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -102,8 +124,11 @@ const Register: React.FC = () => {
                 placeholder="seu@email.com"
                 value={formData.email}
                 onChange={handleInputChange}
-                required
+                className={fieldErrors.email ? 'border-red-500' : ''}
               />
+              {fieldErrors.email && (
+                <p className="text-sm text-red-500">{fieldErrors.email}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -116,7 +141,7 @@ const Register: React.FC = () => {
                   placeholder="Sua senha"
                   value={formData.password}
                   onChange={handleInputChange}
-                  required
+                  className={fieldErrors.password ? 'border-red-500' : ''}
                 />
                 <Button
                   type="button"
@@ -132,6 +157,9 @@ const Register: React.FC = () => {
                   )}
                 </Button>
               </div>
+              {fieldErrors.password && (
+                <p className="text-sm text-red-500">{fieldErrors.password}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -144,7 +172,6 @@ const Register: React.FC = () => {
                   placeholder="Confirme sua senha"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  required
                 />
                 <Button
                   type="button"
