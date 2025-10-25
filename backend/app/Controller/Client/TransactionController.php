@@ -23,13 +23,7 @@ class TransactionController extends AbstractController
     public function deposit(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             $amount = (float) $request->input('amount');
             
@@ -92,13 +86,7 @@ class TransactionController extends AbstractController
     public function withdraw(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             $amount = (float) $request->input('amount');
             $pixType = $request->input('pix_type', 'EMAIL');
@@ -222,13 +210,7 @@ class TransactionController extends AbstractController
     public function getStatement(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros de paginação
             $page = (int) $request->input('page', 1);
@@ -315,13 +297,7 @@ class TransactionController extends AbstractController
     public function getRecentTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros
             $limit = (int) $request->input('limit', 5);
@@ -380,13 +356,7 @@ class TransactionController extends AbstractController
     public function cancelScheduledWithdrawal(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             $transactionId = (int) $request->input('transaction_id');
             
@@ -448,13 +418,7 @@ class TransactionController extends AbstractController
     public function exportExcel(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros de filtro
             $type = $request->input('type', 'all');

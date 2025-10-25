@@ -17,13 +17,7 @@ class AccountController extends AbstractController
     public function getBalance(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Buscar conta diretamente
             $account = Account::where('user_id', $user->id)->first();
@@ -49,13 +43,7 @@ class AccountController extends AbstractController
     public function getAccountInfo(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getUserFromToken();
-            if (!$user) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Token inválido ou expirado',
-                ])->withStatus(401);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             $account = $user->account;
             if (!$account) {

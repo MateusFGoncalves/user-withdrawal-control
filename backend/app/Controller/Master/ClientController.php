@@ -27,14 +27,7 @@ class ClientController extends AbstractController
     public function getClients(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros de paginação e filtros
             $page = (int) $request->input('page', 1);
@@ -142,14 +135,7 @@ class ClientController extends AbstractController
     public function createClient(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Validar dados
             $validator = $this->validationFactory->make($request->all(), [
@@ -209,14 +195,7 @@ class ClientController extends AbstractController
     public function getClient(RequestInterface $request, ResponseInterface $response, int $id): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Buscar cliente
             $client = User::where('id', $id)
@@ -309,14 +288,7 @@ class ClientController extends AbstractController
     public function updateClient(RequestInterface $request, ResponseInterface $response, int $id): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Buscar cliente
             $client = User::where('id', $id)

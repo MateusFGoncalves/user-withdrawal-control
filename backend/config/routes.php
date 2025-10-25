@@ -1,5 +1,8 @@
 <?php
 
+use App\Middleware\AuthMiddleware;
+use App\Middleware\ClientAuthMiddleware;
+use App\Middleware\MasterAuthMiddleware;
 use Hyperf\HttpServer\Router\Router;
 
 // Rotas de autenticação
@@ -18,7 +21,9 @@ Router::addGroup('/client', function () {
     Router::get('/transactions/recent', 'App\Controller\Client\TransactionController@getRecentTransactions');
     Router::post('/transactions/cancel-scheduled', 'App\Controller\Client\TransactionController@cancelScheduledWithdrawal');
     Router::get('/transactions/export-excel', 'App\Controller\Client\TransactionController@exportExcel');
-});
+}, [
+    'middleware' => [AuthMiddleware::class, ClientAuthMiddleware::class]
+]);
 
 // Grupo de rotas para administradores
 Router::addGroup('/master', function () {
@@ -30,4 +35,6 @@ Router::addGroup('/master', function () {
     Router::post('/clients/create', 'App\Controller\Master\ClientController@createClient');
     Router::get('/clients/{id}', 'App\Controller\Master\ClientController@getClient');
     Router::put('/clients/{id}', 'App\Controller\Master\ClientController@updateClient');
-});
+}, [
+    'middleware' => [AuthMiddleware::class, MasterAuthMiddleware::class]
+]);

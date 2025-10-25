@@ -12,10 +12,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Model\User;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-use Hyperf\Config\Annotation\Value;
+use App\Traits\HasAuthenticatedUser;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
@@ -23,6 +20,8 @@ use Psr\Container\ContainerInterface;
 
 abstract class AbstractController
 {
+    use HasAuthenticatedUser;
+
     #[Inject]
     protected ContainerInterface $container;
 
@@ -31,27 +30,4 @@ abstract class AbstractController
 
     #[Inject]
     protected ResponseInterface $response;
-
-    #[Value('jwt.secret')]
-    protected string $jwtSecret = 'your-super-secret-jwt-key-change-in-production';
-
-    /**
-     * Obtém o usuário a partir do token JWT
-     */
-    protected function getUserFromToken(): ?User
-    {
-        $token = $this->request->header('Authorization');
-        if (!$token) {
-            return null;
-        }
-
-        $token = str_replace('Bearer ', '', $token);
-        
-        try {
-            $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
-            return User::find($decoded->user_id);
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
 }

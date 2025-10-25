@@ -20,14 +20,7 @@ class TransactionController extends AbstractController
     public function getStats(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Buscar estatísticas reais
             $totalClients = User::where('user_type', 'CLIENTE')->count();
@@ -96,14 +89,7 @@ class TransactionController extends AbstractController
     public function getRecentTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros
             $limit = (int) $request->input('limit', 4);
@@ -157,14 +143,7 @@ class TransactionController extends AbstractController
     public function getTransactions(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            // Verificar se o usuário é MASTER
-            $user = $this->getUserFromToken();
-            if (!$user || $user->user_type !== 'MASTER') {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Acesso negado. Apenas administradores.',
-                ])->withStatus(403);
-            }
+            $user = $this->getAuthenticatedUser($request);
 
             // Parâmetros de paginação
             $page = (int) $request->input('page', 1);
