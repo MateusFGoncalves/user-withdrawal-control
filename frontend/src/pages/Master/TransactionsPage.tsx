@@ -22,10 +22,13 @@ import {
   AlertCircle,
   User,
   Calendar,
-  DollarSign
+  DollarSign,
+  Download
 } from 'lucide-react';
 import { getApiUrl } from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useMasterExport } from '../../hooks/useMasterExport';
+import { ExportModal } from '../../components/ui/export-modal';
 import toast from 'react-hot-toast';
 
 interface Transaction {
@@ -71,6 +74,10 @@ const TransactionsPage: React.FC = () => {
   const [status, setStatus] = useState('all');
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const { exportToExcel } = useMasterExport();
 
   useEffect(() => {
     fetchTransactions();
@@ -172,6 +179,31 @@ const TransactionsPage: React.FC = () => {
     setSortOrder('desc');
   };
 
+  const handleExportClick = () => {
+    setShowExportModal(true);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportToExcel({
+        search,
+        type,
+        status
+      });
+      setShowExportModal(false);
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast.error('Erro ao exportar transações');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const closeExportModal = () => {
+    setShowExportModal(false);
+  };
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -255,14 +287,20 @@ const TransactionsPage: React.FC = () => {
           <main className="flex-1 p-6 overflow-y-auto">
             <div className="space-y-6">
               {/* Header */}
-              <div>
-                <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                  <BarChart3 className="h-8 w-8 text-blue-600" />
-                  Transações
-                </h1>
-                <p className="text-muted-foreground">
-                  Visualize e gerencie todas as transações do sistema
-                </p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                    <BarChart3 className="h-8 w-8 text-blue-600" />
+                    Transações
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Visualize e gerencie todas as transações do sistema
+                  </p>
+                </div>
+                <Button onClick={handleExportClick} className="flex items-center gap-2">
+                  <Download className="h-4 w-4" />
+                  Exportar Excel
+                </Button>
               </div>
 
               {/* Filtros e Busca */}
@@ -503,6 +541,14 @@ const TransactionsPage: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Modal de exportação */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={closeExportModal}
+        onExport={handleExport}
+        isLoading={isExporting}
+      />
     </div>
   );
 };

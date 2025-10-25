@@ -260,4 +260,146 @@ class TransactionController extends AbstractController
             ])->withStatus(500);
         }
     }
+
+    public function exportExcel(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            // Parâmetros de filtro
+            $search = $request->input('search', '');
+            $type = $request->input('type', 'all');
+            $status = $request->input('status', 'all');
+
+            // Construir query base
+            $query = Transaction::with(['user', 'withdrawalDetails']);
+
+            // Aplicar filtros
+            if ($search) {
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            if ($type !== 'all') {
+                $query->where('type', $type);
+            }
+
+            if ($status !== 'all') {
+                $query->where('status', $status);
+            }
+
+            // Buscar todas as transações (sem paginação para Excel)
+            $transactions = $query->orderBy('created_at', 'desc')->get();
+
+            // Gerar arquivo Excel real
+            $filename = 'transacoes_master_' . date('Y-m-d_H-i-s') . '.xlsx';
+            
+            // Criar planilha Excel
+            $excelContent = $this->generateExcelFile($transactions);
+
+            // Retornar arquivo Excel
+            return $response->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->withHeader('Cache-Control', 'no-cache, must-revalidate')
+                ->withHeader('Expires', '0')
+                ->withHeader('Content-Length', (string) strlen($excelContent))
+                ->raw($excelContent);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+
+    private function generateExcelFile($transactions): string
+    {
+        // Criar nova planilha
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Definir nome da planilha
+        $sheet->setTitle('Transações Master');
+        
+        // Cabeçalhos
+        $headers = [
+            'A1' => 'ID',
+            'B1' => 'Cliente',
+            'C1' => 'Email',
+            'D1' => 'Tipo',
+            'E1' => 'Valor',
+            'F1' => 'Status',
+            'G1' => 'Data Criação',
+            'H1' => 'Agendado para',
+            'I1' => 'Processado em',
+            'J1' => 'Tipo PIX',
+            'K1' => 'Chave PIX',
+            'L1' => 'Motivo da Falha'
+        ];
+        
+        // Definir cabeçalhos
+        foreach ($headers as $cell => $value) {
+            $sheet->setCellValue($cell, $value);
+        }
+        
+        // Estilizar cabeçalho
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '3B82F6']
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+            ]
+        ];
+        
+        $sheet->getStyle('A1:L1')->applyFromArray($headerStyle);
+        
+        // Dados das transações
+        $row = 2;
+        foreach ($transactions as $transaction) {
+            $sheet->setCellValue('A' . $row, $transaction->id);
+            $sheet->setCellValue('B' . $row, $transaction->user->name ?? 'N/A');
+            $sheet->setCellValue('C' . $row, $transaction->user->email ?? 'N/A');
+            $sheet->setCellValue('D' . $row, $transaction->type);
+            $sheet->setCellValue('E' . $row, 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'));
+            $sheet->setCellValue('F' . $row, $transaction->status);
+            $sheet->setCellValue('G' . $row, $transaction->created_at->format('d/m/Y H:i'));
+            $sheet->setCellValue('H' . $row, $transaction->scheduled_at ? $transaction->scheduled_at->format('d/m/Y H:i') : '');
+            $sheet->setCellValue('I' . $row, $transaction->processed_at ? $transaction->processed_at->format('d/m/Y H:i') : '');
+            $sheet->setCellValue('J' . $row, $transaction->withdrawalDetails?->pix_type ?? '');
+            $sheet->setCellValue('K' . $row, $transaction->withdrawalDetails?->pix_key ?? '');
+            $sheet->setCellValue('L' . $row, $transaction->failure_reason ?? '');
+            $row++;
+        }
+        
+        // Ajustar largura das colunas
+        $sheet->getColumnDimension('A')->setWidth(8);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(25);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(18);
+        $sheet->getColumnDimension('H')->setWidth(18);
+        $sheet->getColumnDimension('I')->setWidth(18);
+        $sheet->getColumnDimension('J')->setWidth(12);
+        $sheet->getColumnDimension('K')->setWidth(25);
+        $sheet->getColumnDimension('L')->setWidth(30);
+        
+        // Salvar em string
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+        $writer->save($tempFile);
+        
+        $content = file_get_contents($tempFile);
+        unlink($tempFile);
+        
+        return $content;
+    }
 }

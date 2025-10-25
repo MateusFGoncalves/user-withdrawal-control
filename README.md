@@ -74,6 +74,7 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - ✅ **Filtros Avançados**: Busca por cliente, tipo, status e ordenação
 - ✅ **Paginação Robusta**: Sistema completo com navegação por páginas
 - ✅ **Interface Consistente**: Design alinhado com outros módulos
+- ✅ **Exportação Excel**: Geração de planilhas com dados filtrados
 
 ### 🎨 Interface do Usuário
 - ✅ Página de login responsiva
@@ -193,6 +194,7 @@ GET  /api/client/transactions/recent          # Transações recentes (dashboard
 GET /api/master/transactions/stats    # Estatísticas administrativas
 GET /api/master/transactions/recent   # Transações recentes de todos os usuários
 GET /api/master/transactions/list     # Listar todas as transações com filtros e paginação
+GET /api/master/transactions/export-excel # Exportar transações para Excel
 GET /api/master/clients/list          # Listar clientes com paginação
 POST /api/master/clients/create       # Cadastrar novo cliente
 GET /api/master/clients/{id}          # Visualizar detalhes do cliente
@@ -281,6 +283,13 @@ curl -X GET "http://localhost:8080/api/master/transactions/recent?limit=4&days=3
 ```bash
 curl -X GET "http://localhost:8080/api/master/transactions/list?page=1&limit=10&search=&type=&status=&sort_by=created_at&sort_order=desc" \
   -H "Authorization: Bearer [TOKEN]"
+```
+
+#### **Exportar Transações para Excel (Master)**
+```bash
+curl -X GET "http://localhost:8080/api/master/transactions/export-excel?search=&type=&status=" \
+  -H "Authorization: Bearer [TOKEN]" \
+  --output transacoes_master.xlsx
 ```
 
 #### **Listar Clientes (Master)**
@@ -482,6 +491,7 @@ user-withdrawal-control/
 - **Botão "Ver Cliente"**: Navegação direta para detalhes do cliente
 - **Informações detalhadas**: PIX, datas formatadas, motivos de falha
 - **Header limpo**: Interface simplificada sem informações redundantes
+- **Exportação Excel**: Geração de planilhas com todos os dados filtrados
 
 ### 🔐 Sistema de Autenticação Aprimorado
 - **Suporte a usuários sem senha**: Cadastro pelo master sem definir senha
@@ -834,9 +844,9 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - **Frontend**: React 18 + TypeScript + shadcn/ui + Tailwind CSS + React Router + React Hot Toast
 - **Infraestrutura**: Docker + Docker Compose + Nginx
 - **Banco de Dados**: 4 tabelas com relacionamentos completos
-- **API**: 19 endpoints implementados e testados (7 cliente + 6 master + 4 auth)
+- **API**: 20 endpoints implementados e testados (7 cliente + 7 master + 4 auth)
 - **Componentes**: 15+ componentes shadcn/ui customizados
-- **Hooks**: 2 hooks customizados (useAuth, useExport)
+- **Hooks**: 3 hooks customizados (useAuth, useExport, useMasterExport)
 - **Arquitetura**: Separação por tipos de usuário (Client/Master)
 - **Navegação**: Prefixos consistentes (/client e /master)
 

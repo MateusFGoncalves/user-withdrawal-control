@@ -25,6 +25,7 @@ Router::addGroup('/master', function () {
     Router::get('/transactions/stats', 'App\Controller\Master\TransactionController@getStats');
     Router::get('/transactions/recent', 'App\Controller\Master\TransactionController@getRecentTransactions');
     Router::get('/transactions/list', 'App\Controller\Master\TransactionController@getTransactions');
+    Router::get('/transactions/export-excel', 'App\Controller\Master\TransactionController@exportExcel');
     Router::get('/clients/list', 'App\Controller\Master\ClientController@getClients');
     Router::post('/clients/create', 'App\Controller\Master\ClientController@createClient');
     Router::get('/clients/{id}', 'App\Controller\Master\ClientController@getClient');
