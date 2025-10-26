@@ -1,0 +1,614 @@
+{
+	"info": {
+		"_postman_id": "user-withdrawal-control-api",
+		"name": "User Withdrawal Control API",
+		"description": "API completa do sistema User Withdrawal Control - Sistema de controle financeiro com PHP Hyperf 3 e React",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set(\"token\", response.data.token);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@exemplo.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set(\"token\", response.data.token);",
+									"        pm.environment.set(\"user_type\", response.data.user.user_type);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"teste@exemplo.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Set Initial Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cliente@exemplo.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/set-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "set-password"]
+						}
+					}
+				},
+				{
+					"name": "Get Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "me"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Client - Account",
+			"item": [
+				{
+					"name": "Get Balance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/client/account/balance",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "account", "balance"]
+						}
+					}
+				},
+				{
+					"name": "Get Account Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/client/account/info",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "account", "info"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Client - Transactions",
+			"item": [
+				{
+					"name": "Deposit",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 500.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/deposit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "deposit"]
+						}
+					}
+				},
+				{
+					"name": "Withdraw Immediate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 200.00,\n  \"pix_type\": \"EMAIL\",\n  \"pix_key\": \"teste@exemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/withdraw",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "withdraw"]
+						}
+					}
+				},
+				{
+					"name": "Withdraw Scheduled",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 100.00,\n  \"pix_type\": \"EMAIL\",\n  \"pix_key\": \"teste@exemplo.com\",\n  \"scheduled_at\": \"2025-10-27\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/withdraw",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "withdraw"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Scheduled Withdrawal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transaction_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/cancel-scheduled",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "cancel-scheduled"]
+						}
+					}
+				},
+				{
+					"name": "Get Statement",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/statement?page=1&per_page=10&type=all&status=all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "statement"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "type",
+									"value": "all",
+									"description": "all, DEPOSITO, SAQUE"
+								},
+								{
+									"key": "status",
+									"value": "all",
+									"description": "all, PENDENTE, PROCESSADO, FALHOU, CANCELADO"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Recent Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/recent?limit=4&days=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "recent"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "4"
+								},
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Excel",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/client/transactions/export-excel?type=all&status=all",
+							"host": ["{{base_url}}"],
+							"path": ["api", "client", "transactions", "export-excel"],
+							"query": [
+								{
+									"key": "type",
+									"value": "all"
+								},
+								{
+									"key": "status",
+									"value": "all"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Master - Transactions",
+			"item": [
+				{
+					"name": "Get Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/transactions/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "transactions", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get Recent Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/transactions/recent?limit=4&days=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "transactions", "recent"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "4"
+								},
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List All Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/transactions/list?page=1&limit=10&search=&type=&status=&sort_by=created_at&sort_order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "transactions", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "all, DEPOSITO, SAQUE"
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "all, PENDENTE, PROCESSADO, FALHOU, CANCELADO"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Excel",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/transactions/export-excel?search=&type=&status=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "transactions", "export-excel"],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "type",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Master - Clients",
+			"item": [
+				{
+					"name": "List Clients",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/clients/list?page=1&limit=10&search=&sort_by=created_at&sort_order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "clients", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Client",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@exemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/master/clients/create",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "clients", "create"]
+						}
+					}
+				},
+				{
+					"name": "Get Client",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/master/clients/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "clients", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Client",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"João Silva Atualizado\",\n  \"email\": \"joao.atualizado@exemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/master/clients/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "master", "clients", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+
