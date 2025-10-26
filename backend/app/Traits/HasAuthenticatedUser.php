@@ -12,8 +12,13 @@ trait HasAuthenticatedUser
     /**
      * Obter usuário autenticado do request
      */
-    protected function getAuthenticatedUser(RequestInterface $request): ?User
+    protected function getAuthenticatedUser($request): ?User
     {
+        // Se é Form Request, acessar o request base
+        if (method_exists($request, 'getRequest')) {
+            $request = $request->getRequest();
+        }
+        
         return $request->getAttribute('user');
     }
 
@@ -50,5 +55,29 @@ trait HasAuthenticatedUser
     {
         $user = $this->getAuthenticatedUser($request);
         return $user && $user->user_type === 'CLIENTE';
+    }
+
+    /**
+     * Obter conta do usuário autenticado do request
+     */
+    protected function getAuthenticatedAccount($request)
+    {
+        // Se é Form Request, acessar o request base
+        if (method_exists($request, 'getRequest')) {
+            $baseRequest = $request->getRequest();
+            $account = $baseRequest->getAttribute('account');
+        } else {
+            $account = $request->getAttribute('account');
+        }
+        
+        // Se não houver conta no atributo, tentar carregar do usuário
+        if (!$account) {
+            $user = $this->getAuthenticatedUser($request);
+            if ($user) {
+                $account = $user->account;
+            }
+        }
+        
+        return $account;
     }
 }

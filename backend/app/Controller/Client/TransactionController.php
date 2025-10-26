@@ -9,6 +9,8 @@ use App\Model\Account;
 use App\Model\Transaction;
 use App\Model\User;
 use App\Model\WithdrawalDetails;
+use App\Request\DepositRequest;
+use App\Request\WithdrawRequest;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
@@ -20,28 +22,17 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class TransactionController extends AbstractController
 {
-    public function deposit(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    public function deposit(DepositRequest $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
             $user = $this->getAuthenticatedUser($request);
-
-            $amount = (float) $request->input('amount');
             
-            if ($amount <= 0) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Valor deve ser maior que zero',
-                ])->withStatus(400);
-            }
-
-            // Buscar conta do usuário
-            $account = Account::where('user_id', $user->id)->first();
-            if (!$account) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Conta não encontrada',
-                ])->withStatus(404);
-            }
+            // Acesse os dados validados diretamente do objeto $request
+            $validatedData = $request->validated();
+            $amount = (float) $validatedData['amount']; 
+            
+            // Obter conta do usuário (carregada pelo middleware)
+            $account = $this->getAuthenticatedAccount($request);
 
             // Adicionar saldo à conta
             $account->balance = floatval($account->balance) + $amount;
@@ -75,6 +66,13 @@ class TransactionController extends AbstractController
                     ],
                 ],
             ]);
+        } catch (\Hyperf\Validation\ValidationException $e) {
+            // Erro de validação do Form Request
+            return $response->json([
+                'success' => false,
+                'message' => 'Dados inválidos',
+                'errors' => $e->validator->errors()->toArray()
+            ])->withStatus(422);
         } catch (\Exception $e) {
             return $response->json([
                 'success' => false,
@@ -83,37 +81,20 @@ class TransactionController extends AbstractController
         }
     }
 
-    public function withdraw(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    public function withdraw(WithdrawRequest $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
             $user = $this->getAuthenticatedUser($request);
 
-            $amount = (float) $request->input('amount');
-            $pixType = $request->input('pix_type', 'EMAIL');
-            $pixKey = $request->input('pix_key');
-            $scheduledAt = $request->input('scheduled_at');
+            // Acesse os dados validados diretamente do objeto $request
+            $validatedData = $request->validated();
+            $amount = (float) $validatedData['amount'];
+            $pixType = $validatedData['pix_type'];
+            $pixKey = $validatedData['pix_key'];
+            $scheduledAt = $validatedData['scheduled_at'] ?? null;
 
-            if ($amount <= 0) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Valor deve ser maior que zero',
-                ])->withStatus(400);
-            }
-
-            if (empty($pixKey)) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Chave PIX é obrigatória',
-                ])->withStatus(400);
-            }
-
-            $account = $user->account;
-            if (!$account) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Conta não encontrada',
-                ])->withStatus(404);
-            }
+            // Obter conta do usuário (carregada pelo middleware)
+            $account = $this->getAuthenticatedAccount($request);
 
             // Verificar se é saque agendado
             $isScheduled = !empty($scheduledAt);

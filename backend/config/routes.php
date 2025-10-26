@@ -2,6 +2,7 @@
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ClientAuthMiddleware;
+use App\Middleware\LoadUserAccountMiddleware;
 use App\Middleware\MasterAuthMiddleware;
 use Hyperf\HttpServer\Router\Router;
 
@@ -22,7 +23,7 @@ Router::addGroup('/client', function () {
     Router::post('/transactions/cancel-scheduled', 'App\Controller\Client\TransactionController@cancelScheduledWithdrawal');
     Router::get('/transactions/export-excel', 'App\Controller\Client\TransactionController@exportExcel');
 }, [
-    'middleware' => [AuthMiddleware::class, ClientAuthMiddleware::class]
+    'middleware' => [AuthMiddleware::class, ClientAuthMiddleware::class, LoadUserAccountMiddleware::class]
 ]);
 
 // Grupo de rotas para administradores

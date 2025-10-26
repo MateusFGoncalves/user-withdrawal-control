@@ -5,7 +5,7 @@ namespace App\Request;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
-use Hyperf\Validation\Exception\ValidationException;
+use Hyperf\Validation\ValidationException;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 
 abstract class FormRequest
