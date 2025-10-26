@@ -58,4 +58,13 @@ class DateTimeHelper
     {
         return $dateTime->format('c');
     }
+
+    /**
+     * Format date string with timezone for ISO 8601 format
+     */
+    public static function formatDateTimeString(string $dateTimeString): string
+    {
+        $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dateTimeString, self::getBrazilTimezone());
+        return $dateTime->format('c');
+    }
 }
