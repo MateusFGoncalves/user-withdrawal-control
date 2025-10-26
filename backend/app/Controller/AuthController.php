@@ -186,19 +186,18 @@ class AuthController
                 ])->withStatus(401);
             }
 
-            // Verificar se o usuário tem senha definida
+            // Se o usuário não tem senha definida, definir a senha do primeiro login
             if ($user->password === null) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Usuário sem senha definida. Entre em contato com o administrador.',
-                ])->withStatus(401);
-            }
-
-            if (!$user->verifyPassword($request->input('password'))) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Credenciais inválidas',
-                ])->withStatus(401);
+                $user->setPasswordAttribute($request->input('password'));
+                $user->save();
+            } else {
+                // Verificar senha se já está definida
+                if (!$user->verifyPassword($request->input('password'))) {
+                    return $response->json([
+                        'success' => false,
+                        'message' => 'Credenciais inválidas',
+                    ])->withStatus(401);
+                }
             }
 
             $token = $this->generateToken($user);
