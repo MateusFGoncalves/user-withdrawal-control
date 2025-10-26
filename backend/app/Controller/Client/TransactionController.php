@@ -43,9 +43,9 @@ class TransactionController extends AbstractController
             $transaction = new Transaction();
             $transaction->user_id = $user->id;
             $transaction->account_id = $account->id;
-            $transaction->type = 'DEPOSITO';
+            $transaction->type = Transaction::TYPE_DEPOSIT;
             $transaction->amount = $amount;
-            $transaction->status = 'PROCESSADO';
+            $transaction->status = Transaction::STATUS_PROCESSED;
             $transaction->processed_at = date('Y-m-d H:i:s');
             $transaction->save();
 
@@ -352,8 +352,8 @@ class TransactionController extends AbstractController
             // Buscar a transação
             $transaction = Transaction::where('id', $transactionId)
                 ->where('user_id', $user->id)
-                ->where('type', 'SAQUE')
-                ->where('status', 'PENDENTE')
+                ->where('type', Transaction::TYPE_WITHDRAWAL)
+                ->where('status', Transaction::STATUS_PENDING)
                 ->first();
 
             if (!$transaction) {
@@ -364,7 +364,7 @@ class TransactionController extends AbstractController
             }
 
             // Verificar se ainda é possível cancelar (não processado)
-            if ($transaction->status !== 'PENDENTE') {
+            if ($transaction->status !== Transaction::STATUS_PENDING) {
                 return $response->json([
                     'success' => false,
                     'message' => 'Este saque já foi processado e não pode ser cancelado',
@@ -373,7 +373,7 @@ class TransactionController extends AbstractController
 
             // Atualizar status para cancelado
             $transaction->update([
-                'status' => 'CANCELADO',
+                'status' => Transaction::STATUS_CANCELLED,
                 'processed_at' => date('Y-m-d H:i:s'),
                 'failure_reason' => 'Cancelado pelo usuário',
             ]);
@@ -493,7 +493,7 @@ class TransactionController extends AbstractController
         $row = 2;
         foreach ($transactions as $transaction) {
             $sheet->setCellValue('A' . $row, $transaction->id);
-            $sheet->setCellValue('B' . $row, $transaction->type === 'DEPOSITO' ? 'Depósito' : 'Saque');
+            $sheet->setCellValue('B' . $row, $transaction->type === Transaction::TYPE_DEPOSIT ? 'Depósito' : 'Saque');
             $sheet->setCellValue('C' . $row, 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'));
             $sheet->setCellValue('D' . $row, $this->formatStatus($transaction->status));
             $sheet->setCellValue('E' . $row, $this->formatDate($transaction->created_at));
@@ -557,10 +557,10 @@ class TransactionController extends AbstractController
     private function formatStatus($status): string
     {
         $statuses = [
-            'PENDENTE' => 'Pendente',
-            'PROCESSADO' => 'Processado',
-            'FALHOU' => 'Falhou',
-            'CANCELADO' => 'Cancelado'
+            Transaction::STATUS_PENDING => 'Pendente',
+            Transaction::STATUS_PROCESSED => 'Processado',
+            Transaction::STATUS_FAILED => 'Falhou',
+            Transaction::STATUS_CANCELLED => 'Cancelado'
         ];
         return $statuses[$status] ?? $status;
     }

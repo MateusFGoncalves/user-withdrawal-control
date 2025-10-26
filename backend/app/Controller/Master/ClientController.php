@@ -66,16 +66,16 @@ class ClientController extends AbstractController
                 // Calcular estatísticas do cliente
                 $totalTransactions = Transaction::where('user_id', $client->id)->count();
                 $totalDeposits = Transaction::where('user_id', $client->id)
-                    ->where('type', 'DEPOSITO')
-                    ->where('status', 'PROCESSADO')
+                    ->where('type', Transaction::TYPE_DEPOSIT)
+                    ->where('status', Transaction::STATUS_PROCESSED)
                     ->sum('amount');
                 $totalWithdrawals = Transaction::where('user_id', $client->id)
-                    ->where('type', 'SAQUE')
-                    ->where('status', 'PROCESSADO')
+                    ->where('type', Transaction::TYPE_WITHDRAWAL)
+                    ->where('status', Transaction::STATUS_PROCESSED)
                     ->sum('amount');
                 $scheduledWithdrawals = Transaction::where('user_id', $client->id)
-                    ->where('type', 'SAQUE')
-                    ->where('status', 'PENDENTE')
+                    ->where('type', Transaction::TYPE_WITHDRAWAL)
+                    ->where('status', Transaction::STATUS_PENDING)
                     ->sum('amount');
 
                 return [
@@ -236,16 +236,16 @@ class ClientController extends AbstractController
             // Calcular estatísticas detalhadas
             $totalTransactions = Transaction::where('user_id', $client->id)->count();
             $totalDeposits = Transaction::where('user_id', $client->id)
-                ->where('type', 'DEPOSITO')
-                ->where('status', 'PROCESSADO')
+                ->where('type', Transaction::TYPE_DEPOSIT)
+                ->where('status', Transaction::STATUS_PROCESSED)
                 ->sum('amount');
             $totalWithdrawals = Transaction::where('user_id', $client->id)
-                ->where('type', 'SAQUE')
-                ->where('status', 'PROCESSADO')
+                ->where('type', Transaction::TYPE_WITHDRAWAL)
+                ->where('status', Transaction::STATUS_PROCESSED)
                 ->sum('amount');
             $scheduledWithdrawals = Transaction::where('user_id', $client->id)
-                ->where('type', 'SAQUE')
-                ->where('status', 'PENDENTE')
+                ->where('type', Transaction::TYPE_WITHDRAWAL)
+                ->where('status', Transaction::STATUS_PENDING)
                 ->sum('amount');
 
             $account = $client->account;

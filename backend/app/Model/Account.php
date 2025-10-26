@@ -68,8 +68,8 @@ class Account extends Model
     public function getScheduledWithdrawals(): float
     {
         return floatval(\App\Model\Transaction::where('user_id', $this->user_id)
-            ->where('type', 'SAQUE')
-            ->where('status', 'PENDENTE')
+            ->where('type', Transaction::TYPE_WITHDRAWAL)
+            ->where('status', Transaction::STATUS_PENDING)
             ->where('scheduled_at', '>', date('Y-m-d H:i:s'))
             ->sum('amount'));
     }

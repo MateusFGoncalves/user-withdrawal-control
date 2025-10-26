@@ -40,6 +40,7 @@ class Transaction extends Model
     public const STATUS_PENDING = 'PENDENTE';
     public const STATUS_PROCESSED = 'PROCESSADO';
     public const STATUS_FAILED = 'FALHOU';
+    public const STATUS_CANCELLED = 'CANCELADO';
 
     public function user()
     {
