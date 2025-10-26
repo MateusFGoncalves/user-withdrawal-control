@@ -14,6 +14,7 @@ use App\Request\DepositRequest;
 use App\Request\WithdrawRequest;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
+use Hyperf\Validation\ValidationException;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -67,7 +68,7 @@ class TransactionController extends AbstractController
                     ],
                 ],
             ]);
-        } catch (\Hyperf\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             // Erro de validação do Form Request
             return $response->json([
                 'success' => false,
@@ -181,6 +182,13 @@ class TransactionController extends AbstractController
                     ],
                 ],
             ]);
+        } catch (ValidationException $e) {
+            // Erro de validação do Form Request
+            return $response->json([
+                'success' => false,
+                'message' => 'Dados inválidos',
+                'errors' => $e->validator->errors()->toArray()
+            ])->withStatus(422);
         } catch (\Exception $e) {
             return $response->json([
                 'success' => false,
