@@ -284,7 +284,7 @@ class AuthController
                 return $response->json([
                     'success' => false,
                     'message' => 'Usuário já possui senha definida',
-                ])->withStatus(400);
+                ])->withStatus(422);
             }
 
             // Definir a senha

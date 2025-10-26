@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Client;
 
 use App\Controller\AbstractController;
+use App\Helper\DateTimeHelper;
 use App\Model\Account;
 use App\Model\Transaction;
 use App\Model\User;
@@ -98,13 +99,13 @@ class TransactionController extends AbstractController
 
             // Verificar se é saque agendado
             $isScheduled = !empty($scheduledAt);
+            $scheduledDate = null;
             
             if ($isScheduled) {
-                // Configurar fuso horário do Brasil
-                $timezone = new \DateTimeZone('America/Sao_Paulo');
-                $scheduledDate = new \DateTime($scheduledAt, $timezone);
-                $now = new \DateTime('now', $timezone);
-                $maxDate = (new \DateTime('now', $timezone))->modify('+7 days');
+                // Criar data agendada para 06:00 da manhã
+                $scheduledDate = DateTimeHelper::createScheduledAt($scheduledAt);
+                $now = DateTimeHelper::createBrazilDateTime();
+                $maxDate = DateTimeHelper::createBrazilDateTime('now')->modify('+7 days');
 
                 // Comparar apenas as datas (sem horário)
                 $scheduledDateOnly = $scheduledDate->format('Y-m-d');
@@ -115,22 +116,24 @@ class TransactionController extends AbstractController
                     return $response->json([
                         'success' => false,
                         'message' => 'Data de agendamento deve ser futura',
-                    ])->withStatus(400);
+                    ])->withStatus(422);
                 }
 
                 if ($scheduledDateOnly > $maxDateOnly) {
                     return $response->json([
                         'success' => false,
                         'message' => 'Agendamento limitado a 7 dias',
-                    ])->withStatus(400);
+                    ])->withStatus(422);
                 }
-            } else {
+            }
+
+            if (!$isScheduled) {
                 // Saque imediato - verificar saldo
                 if (!$account->hasSufficientBalance($amount)) {
                     return $response->json([
                         'success' => false,
                         'message' => 'Saldo insuficiente',
-                    ])->withStatus(400);
+                    ])->withStatus(422);
                 }
             }
 
@@ -141,7 +144,7 @@ class TransactionController extends AbstractController
                 'type' => Transaction::TYPE_WITHDRAWAL,
                 'amount' => $amount,
                 'status' => $isScheduled ? Transaction::STATUS_PENDING : Transaction::STATUS_PROCESSED,
-                'scheduled_at' => $isScheduled ? $scheduledAt : null,
+                'scheduled_at' => $isScheduled ? $scheduledDate->format('Y-m-d H:i:s') : null,
                 'processed_at' => $isScheduled ? null : date('Y-m-d H:i:s'),
             ]);
 
@@ -345,7 +348,7 @@ class TransactionController extends AbstractController
                 return $response->json([
                     'success' => false,
                     'message' => 'ID da transação é obrigatório',
-                ])->withStatus(400);
+                ])->withStatus(422);
             }
 
             // Buscar a transação
@@ -367,7 +370,7 @@ class TransactionController extends AbstractController
                 return $response->json([
                     'success' => false,
                     'message' => 'Este saque já foi processado e não pode ser cancelado',
-                ])->withStatus(400);
+                ])->withStatus(422);
             }
 
             // Atualizar status para cancelado
