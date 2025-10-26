@@ -15,7 +15,9 @@ use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use App\Model\User;
 use App\Model\Account;
 use App\Model\Transaction;
+use App\Request\CreateClientRequest;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
+use Hyperf\Validation\ValidationException;
 use Hyperf\Di\Annotation\Inject;
 
 #[Controller(prefix: '/master')]
@@ -132,29 +134,18 @@ class ClientController extends AbstractController
         }
     }
 
-    public function createClient(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
+    public function createClient(CreateClientRequest $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
             $user = $this->getAuthenticatedUser($request);
 
-            // Validar dados
-            $validator = $this->validationFactory->make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email',
-            ]);
-
-            if ($validator->fails()) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Dados inválidos.',
-                    'errors' => $validator->errors(),
-                ])->withStatus(422);
-            }
+            // Acessar dados validados
+            $validatedData = $request->validated();
 
             // Criar cliente
             $client = new User();
-            $client->name = $request->input('name');
-            $client->email = $request->input('email');
+            $client->name = $validatedData['name'];
+            $client->email = $validatedData['email'];
             $client->password = null; // Senha será definida no primeiro acesso
             $client->user_type = 'CLIENTE';
             $client->save();
@@ -184,6 +175,13 @@ class ClientController extends AbstractController
                     ],
                 ],
             ]);
+        } catch (ValidationException $e) {
+            // Erro de validação do Form Request
+            return $response->json([
+                'success' => false,
+                'message' => 'Dados inválidos',
+                'errors' => $e->validator->errors()->toArray()
+            ])->withStatus(422);
         } catch (\Exception $e) {
             return $response->json([
                 'success' => false,
