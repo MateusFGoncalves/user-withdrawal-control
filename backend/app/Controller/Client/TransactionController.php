@@ -103,29 +103,8 @@ class TransactionController extends AbstractController
             $scheduledDate = null;
             
             if ($isScheduled) {
-                // Criar data agendada para 06:00 da manhã
+                // Criar data agendada para 06:00 da manhã (validação já feita no Form Request)
                 $scheduledDate = DateTimeHelper::createScheduledAt($scheduledAt);
-                $now = DateTimeHelper::createBrazilDateTime();
-                $maxDate = DateTimeHelper::createBrazilDateTime('now')->modify('+7 days');
-
-                // Comparar apenas as datas (sem horário)
-                $scheduledDateOnly = $scheduledDate->format('Y-m-d');
-                $nowDateOnly = $now->format('Y-m-d');
-                $maxDateOnly = $maxDate->format('Y-m-d');
-
-                if ($scheduledDateOnly <= $nowDateOnly) {
-                    return $response->json([
-                        'success' => false,
-                        'message' => 'Data de agendamento deve ser futura',
-                    ])->withStatus(422);
-                }
-
-                if ($scheduledDateOnly > $maxDateOnly) {
-                    return $response->json([
-                        'success' => false,
-                        'message' => 'Agendamento limitado a 7 dias',
-                    ])->withStatus(422);
-                }
             }
 
             // Verificar saldo sempre (para saque imediato ou agendado)

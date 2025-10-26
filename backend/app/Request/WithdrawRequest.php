@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Request;
 
+use App\Helper\DateTimeHelper;
+
 class WithdrawRequest extends FormRequest
 {
     /**
@@ -23,7 +25,27 @@ class WithdrawRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01'],
             'pix_type' => ['required', 'string'],
             'pix_key' => ['required', 'string'],
-            'scheduled_at' => ['nullable'],
+            'scheduled_at' => ['nullable', 'date', function ($attribute, $value, $fail) {
+                if ($value) {
+                    // Usar helper para timezone do Brasil
+                    $scheduledDate = DateTimeHelper::createScheduledAt($value);
+                    $now = DateTimeHelper::createBrazilDateTime();
+                    $maxDate = DateTimeHelper::createBrazilDateTime('now')->modify('+7 days');
+
+                    // Comparar apenas as datas (sem horário)
+                    $scheduledDateOnly = $scheduledDate->format('Y-m-d');
+                    $nowDateOnly = $now->format('Y-m-d');
+                    $maxDateOnly = $maxDate->format('Y-m-d');
+
+                    if ($scheduledDateOnly <= $nowDateOnly) {
+                        $fail('A data de agendamento deve ser futura');
+                    }
+
+                    if ($scheduledDateOnly > $maxDateOnly) {
+                        $fail('O agendamento é limitado a 7 dias');
+                    }
+                }
+            }],
         ];
     }
 
