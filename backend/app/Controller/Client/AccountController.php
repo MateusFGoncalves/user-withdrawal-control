@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Client;
 
 use App\Controller\AbstractController;
-use App\Model\Account;
 use App\Model\User;
 use App\Model\Transaction;
 use Hyperf\HttpServer\Contract\RequestInterface;
@@ -17,16 +16,8 @@ class AccountController extends AbstractController
     public function getBalance(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
-            $user = $this->getAuthenticatedUser($request);
-
-            // Buscar conta diretamente
-            $account = Account::where('user_id', $user->id)->first();
-            if (!$account) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Conta não encontrada',
-                ])->withStatus(404);
-            }
+            // A conta já foi carregada pelo middleware
+            $account = $this->getAuthenticatedAccount($request);
 
             return $response->json([
                 'success' => true,
@@ -44,15 +35,9 @@ class AccountController extends AbstractController
     {
         try {
             $user = $this->getAuthenticatedUser($request);
-
-            $account = $user->account;
-            if (!$account) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Conta não encontrada',
-                ])->withStatus(404);
-            }
-
+            
+            // A conta já foi carregada pelo middleware
+            $account = $this->getAuthenticatedAccount($request);
             $balanceData = $account->getBalanceData();
 
             return $response->json([

@@ -260,7 +260,7 @@ class TransactionController extends AbstractController
                     'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                     'status' => $transaction->status,
                     'created_at' => $transaction->created_at,
-                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatWithTimezone(\DateTime::createFromFormat('Y-m-d H:i:s', $transaction->scheduled_at, DateTimeHelper::getBrazilTimezone())) : null,
+                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatDateTimeString((string) $transaction->scheduled_at) : null,
                     'processed_at' => $transaction->processed_at,
                 ];
 
@@ -332,7 +332,7 @@ class TransactionController extends AbstractController
                     'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                     'status' => $transaction->status,
                     'created_at' => $transaction->created_at,
-                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatWithTimezone(\DateTime::createFromFormat('Y-m-d H:i:s', $transaction->scheduled_at, DateTimeHelper::getBrazilTimezone())) : null,
+                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatDateTimeString((string) $transaction->scheduled_at) : null,
                     'processed_at' => $transaction->processed_at,
                 ];
 
