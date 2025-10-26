@@ -50,4 +50,12 @@ class DateTimeHelper
         
         return $scheduledDate;
     }
+
+    /**
+     * Format DateTime with timezone for ISO 8601 format
+     */
+    public static function formatWithTimezone(DateTime $dateTime): string
+    {
+        return $dateTime->format('c');
+    }
 }

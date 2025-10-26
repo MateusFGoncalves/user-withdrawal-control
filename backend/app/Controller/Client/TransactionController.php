@@ -7,6 +7,7 @@ namespace App\Controller\Client;
 use App\Controller\AbstractController;
 use App\Helper\DateTimeHelper;
 use App\Model\Account;
+use DateTimeZone;
 use App\Model\Transaction;
 use App\Model\User;
 use App\Model\WithdrawalDetails;
@@ -149,7 +150,7 @@ class TransactionController extends AbstractController
                         'amount' => $transaction->amount,
                         'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                         'status' => $transaction->status,
-                        'scheduled_at' => $transaction->scheduled_at,
+                        'scheduled_at' => $isScheduled ? DateTimeHelper::formatWithTimezone($scheduledDate) : null,
                         'processed_at' => $transaction->processed_at,
                     ],
                     'withdrawal_details' => [
@@ -259,7 +260,7 @@ class TransactionController extends AbstractController
                     'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                     'status' => $transaction->status,
                     'created_at' => $transaction->created_at,
-                    'scheduled_at' => $transaction->scheduled_at,
+                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatWithTimezone(\DateTime::createFromFormat('Y-m-d H:i:s', $transaction->scheduled_at, DateTimeHelper::getBrazilTimezone())) : null,
                     'processed_at' => $transaction->processed_at,
                 ];
 
@@ -331,7 +332,7 @@ class TransactionController extends AbstractController
                     'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
                     'status' => $transaction->status,
                     'created_at' => $transaction->created_at,
-                    'scheduled_at' => $transaction->scheduled_at,
+                    'scheduled_at' => $transaction->scheduled_at ? DateTimeHelper::formatWithTimezone(\DateTime::createFromFormat('Y-m-d H:i:s', $transaction->scheduled_at, DateTimeHelper::getBrazilTimezone())) : null,
                     'processed_at' => $transaction->processed_at,
                 ];
 
