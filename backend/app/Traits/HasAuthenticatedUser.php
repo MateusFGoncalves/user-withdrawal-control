@@ -15,7 +15,7 @@ trait HasAuthenticatedUser
     protected function getAuthenticatedUser($request): ?User
     {
         // Se é Form Request, acessar o request base
-        if (method_exists($request, 'getRequest')) {
+        if ($request instanceof \App\Request\FormRequest) {
             $request = $request->getRequest();
         }
         
@@ -63,7 +63,7 @@ trait HasAuthenticatedUser
     protected function getAuthenticatedAccount($request)
     {
         // Se é Form Request, acessar o request base
-        if (method_exists($request, 'getRequest')) {
+        if ($request instanceof \App\Request\FormRequest) {
             $baseRequest = $request->getRequest();
             $account = $baseRequest->getAttribute('account');
         } else {
