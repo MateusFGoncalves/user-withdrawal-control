@@ -10,6 +10,7 @@ use App\Model\Account;
 use App\Model\Transaction;
 use App\Model\User;
 use App\Model\WithdrawalDetails;
+use App\Request\CancelScheduledWithdrawalRequest;
 use App\Request\DepositRequest;
 use App\Request\WithdrawRequest;
 use Hyperf\HttpServer\Contract\RequestInterface;
@@ -176,6 +177,45 @@ class TransactionController extends AbstractController
         }
     }
 
+    public function cancelScheduledWithdrawal(CancelScheduledWithdrawalRequest $request, ResponseInterface $response): PsrResponseInterface
+    {
+        try {
+            // A transação já foi validada no Form Request
+            $transaction = $request->getValidatedTransaction();
+
+            // Atualizar status para cancelado
+            $transaction->update([
+                'status' => Transaction::STATUS_CANCELLED,
+                'processed_at' => date('Y-m-d H:i:s'),
+                'failure_reason' => 'Cancelado pelo usuário',
+            ]);
+
+            return $response->json([
+                'success' => true,
+                'message' => 'Saque agendado cancelado com sucesso',
+                'data' => [
+                    'transaction' => [
+                        'id' => $transaction->id,
+                        'status' => $transaction->status,
+                        'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
+                    ],
+                ],
+            ]);
+        } catch (ValidationException $e) {
+            // Erro de validação do Form Request
+            return $response->json([
+                'success' => false,
+                'message' => 'Dados inválidos',
+                'errors' => $e->validator->errors()->toArray()
+            ])->withStatus(422);
+        } catch (\Exception $e) {
+            return $response->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
+            ])->withStatus(500);
+        }
+    }
+    
     public function getStatement(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
     {
         try {
@@ -312,68 +352,6 @@ class TransactionController extends AbstractController
                     'transactions' => $formattedTransactions,
                     'period' => "Últimos {$days} dias",
                     'total_found' => $transactions->count(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return $response->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor: ' . $e->getMessage(),
-            ])->withStatus(500);
-        }
-    }
-
-    public function cancelScheduledWithdrawal(RequestInterface $request, ResponseInterface $response): PsrResponseInterface
-    {
-        try {
-            $user = $this->getAuthenticatedUser($request);
-
-            $transactionId = (int) $request->input('transaction_id');
-            
-            if (!$transactionId) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'ID da transação é obrigatório',
-                ])->withStatus(422);
-            }
-
-            // Buscar a transação
-            $transaction = Transaction::where('id', $transactionId)
-                ->where('user_id', $user->id)
-                ->where('type', Transaction::TYPE_WITHDRAWAL)
-                ->where('status', Transaction::STATUS_PENDING)
-                ->first();
-
-            if (!$transaction) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Saque agendado não encontrado ou já processado',
-                ])->withStatus(404);
-            }
-
-            // Verificar se ainda é possível cancelar (não processado)
-            if ($transaction->status !== Transaction::STATUS_PENDING) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Este saque já foi processado e não pode ser cancelado',
-                ])->withStatus(422);
-            }
-
-            // Atualizar status para cancelado
-            $transaction->update([
-                'status' => Transaction::STATUS_CANCELLED,
-                'processed_at' => date('Y-m-d H:i:s'),
-                'failure_reason' => 'Cancelado pelo usuário',
-            ]);
-
-            return $response->json([
-                'success' => true,
-                'message' => 'Saque agendado cancelado com sucesso',
-                'data' => [
-                    'transaction' => [
-                        'id' => $transaction->id,
-                        'status' => $transaction->status,
-                        'formatted_amount' => 'R$ ' . number_format((float) $transaction->amount, 2, ',', '.'),
-                    ],
                 ],
             ]);
         } catch (\Exception $e) {
