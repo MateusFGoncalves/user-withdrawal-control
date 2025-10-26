@@ -397,7 +397,21 @@ user-withdrawal-control/
 │   │   │   │   ├── AccountController.php   # Operações de conta
 │   │   │   │   └── TransactionController.php # Depósitos e saques
 │   │   │   └── Master/                 # Controladores do master
+│   │   │       ├── ClientController.php    # Gestão de clientes
 │   │   │       └── TransactionController.php # Dashboard e estatísticas
+│   │   ├── Request/          # Form Requests de validação
+│   │   │   ├── CreateClientRequest.php         # Validação de criação de cliente
+│   │   │   ├── UpdateClientRequest.php         # Validação de atualização de cliente
+│   │   │   ├── DepositRequest.php              # Validação de depósito
+│   │   │   ├── WithdrawRequest.php             # Validação de saque
+│   │   │   └── CancelScheduledWithdrawalRequest.php # Validação de cancelamento
+│   │   ├── Middleware/       # Middlewares customizados
+│   │   │   ├── LoadUserAccountMiddleware.php   # Carrega conta do usuário
+│   │   │   └── AuthMiddleware.php               # Autenticação JWT
+│   │   ├── Helper/           # Helpers utilitários
+│   │   │   └── DateTimeHelper.php              # Helper de data/hora com timezone
+│   │   ├── Traits/           # Traits reutilizáveis
+│   │   │   └── HasAuthenticatedUser.php        # Trait para acesso ao usuário autenticado
 │   │   └── Model/          # Modelos de dados
 │   │       ├── User.php                # Usuários
 │   │       ├── Account.php             # Contas digitais
@@ -472,6 +486,16 @@ user-withdrawal-control/
 
 ## 🆕 Melhorias Recentes
 
+### ✅ Form Requests e Validação Centralizada
+- **CreateClientRequest**: Validação de criação de clientes
+- **UpdateClientRequest**: Validação de atualização de clientes
+- **DepositRequest**: Validação de depósitos
+- **WithdrawRequest**: Validação de saques com timezone correto
+- **CancelScheduledWithdrawalRequest**: Validação de cancelamento de saques agendados
+- **Validação customizada**: Verificação de email único no update
+- **Timezone Brasil**: Horário fixo às 06:00 AM para saques agendados
+- **Mensagens personalizadas**: Feedback em português para todas as validações
+
 ### ✨ Módulo de Gestão de Clientes (Master)
 - **CRUD completo**: Listagem, visualização, edição e cadastro de clientes
 - **Cadastro simplificado**: Apenas nome e email (senha definida no primeiro acesso)
@@ -515,6 +539,10 @@ user-withdrawal-control/
 - **Banco de dados atualizado**: Campo password permite NULL, status CANCELADO adicionado
 - **Correção de conflitos de rotas**: Centralização no routes.php para evitar conflitos
 - **Arquitetura de rotas consistente**: Padrão unificado para todos os módulos
+- **DateTimeHelper**: Centralização de operações de data/hora com timezone Brasil
+- **LoadUserAccountMiddleware**: Middleware para carregar conta do usuário autenticado
+- **HasAuthenticatedUser trait**: Trait para acesso seguro ao usuário e conta autenticados
+- **Form Requests**: Validação centralizada e reutilizável em Form Requests
 
 ### 🐛 Correções e Melhorias
 - **Loop infinito resolvido**: Substituição de window.location.href por navigate()
@@ -522,6 +550,9 @@ user-withdrawal-control/
 - **Navegação com replace**: Evita acúmulo desnecessário no histórico
 - **Tratamento de erros**: Mensagens claras para usuários sem senha
 - **Validação robusta**: Verificação segura de senhas null
+- **Timezone correto**: Horário fixo às 06:00 AM para saques agendados
+- **Formatação de datas**: Datas formatadas com timezone Brasil corretamente
+- **Validação de email único**: Validação customizada que exclui o próprio ID no update
 
 ## 🚀 Status do Projeto
 
