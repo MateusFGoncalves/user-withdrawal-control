@@ -16,6 +16,7 @@ use App\Model\User;
 use App\Model\Account;
 use App\Model\Transaction;
 use App\Request\CreateClientRequest;
+use App\Request\UpdateClientRequest;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Validation\ValidationException;
 use Hyperf\Di\Annotation\Inject;
@@ -283,10 +284,13 @@ class ClientController extends AbstractController
         }
     }
 
-    public function updateClient(RequestInterface $request, ResponseInterface $response, int $id): PsrResponseInterface
+    public function updateClient(UpdateClientRequest $request, ResponseInterface $response, int $id): PsrResponseInterface
     {
         try {
             $user = $this->getAuthenticatedUser($request);
+
+            // Definir ID do cliente no Form Request para validação de email único
+            $request->setClientId($id);
 
             // Buscar cliente
             $client = User::where('id', $id)
@@ -300,23 +304,12 @@ class ClientController extends AbstractController
                 ])->withStatus(404);
             }
 
-            // Validar dados
-            $validator = $this->validationFactory->make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email,' . $id,
-            ]);
-
-            if ($validator->fails()) {
-                return $response->json([
-                    'success' => false,
-                    'message' => 'Dados inválidos.',
-                    'errors' => $validator->errors(),
-                ])->withStatus(422);
-            }
+            // Acessar dados validados
+            $validatedData = $request->validated();
 
             // Atualizar cliente
-            $client->name = $request->input('name');
-            $client->email = $request->input('email');
+            $client->name = $validatedData['name'];
+            $client->email = $validatedData['email'];
             $client->save();
 
             return $response->json([
@@ -332,6 +325,13 @@ class ClientController extends AbstractController
                     ],
                 ],
             ]);
+        } catch (ValidationException $e) {
+            // Erro de validação do Form Request
+            return $response->json([
+                'success' => false,
+                'message' => 'Dados inválidos',
+                'errors' => $e->validator->errors()->toArray()
+            ])->withStatus(422);
         } catch (\Exception $e) {
             return $response->json([
                 'success' => false,
