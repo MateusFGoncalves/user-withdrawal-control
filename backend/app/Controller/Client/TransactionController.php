@@ -127,14 +127,12 @@ class TransactionController extends AbstractController
                 }
             }
 
-            if (!$isScheduled) {
-                // Saque imediato - verificar saldo
-                if (!$account->hasSufficientBalance($amount)) {
-                    return $response->json([
-                        'success' => false,
-                        'message' => 'Saldo insuficiente',
-                    ])->withStatus(422);
-                }
+            // Verificar saldo sempre (para saque imediato ou agendado)
+            if (!$account->hasSufficientBalance($amount)) {
+                return $response->json([
+                    'success' => false,
+                    'message' => 'Saldo insuficiente',
+                ])->withStatus(422);
             }
 
             // Criar transação de saque
