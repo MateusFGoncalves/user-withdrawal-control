@@ -162,6 +162,10 @@ Cada cliente possui:
 
 ## 📊 Modelos de Dados
 
+### 🗄️ Diagrama ER do Banco de Dados
+
+![Diagrama ER](backend/public/images/diagram.png)
+
 ### 🏦 Estrutura do Banco de Dados
 
 #### **users** - Usuários do Sistema
