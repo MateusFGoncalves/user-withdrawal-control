@@ -120,11 +120,45 @@ docker-compose up -d
 ./setup.sh
 ```
 
-### 5. Acesse a aplicação
+### 5. Execute o seed de dados de teste
+```bash
+# Criar dados de teste (1 master + 4 clientes com transações)
+docker-compose exec backend php bin/hyperf.php db:seed
+```
+
+### 6. Acesse a aplicação
 - **Frontend**: http://localhost:3000
-- **API**: http://localhost:8080
+- **API**: http://localhost:9501
 - **MySQL**: localhost:3306
 - **Redis**: localhost:6379
+
+## 🔑 Credenciais de Teste
+
+Após executar o seed de dados, você pode usar as seguintes credenciais para testar o sistema:
+
+### 👑 Master (Administrador)
+- **Email**: `master@exemplo.com`
+- **Senha**: `123456`
+- **Acesso**: Dashboard administrativo completo
+
+### 👤 Clientes de Teste
+
+| Nome | Email | Senha | Saldo Inicial |
+|------|-------|-------|--------------|
+| João Silva | `joao@exemplo.com` | `123456` | Variável |
+| Maria Santos | `maria@exemplo.com` | `123456` | Variável |
+| Pedro Oliveira | `pedro@exemplo.com` | `123456` | Variável |
+| Ana Costa | `ana@exemplo.com` | `123456` | Variável |
+
+> **Nota**: As credenciais de teste também estão disponíveis na página de login em um box discreto.
+
+### 📊 Dados de Teste
+
+Cada cliente possui:
+- ✅ Conta com saldo variável
+- ✅ Histórico de transações (depósitos e saques)
+- ✅ Detalhes PIX associados aos saques
+- ✅ Transações distribuídas nos últimos 3 dias
 
 ## 📊 Modelos de Dados
 
@@ -356,8 +390,11 @@ curl -X POST http://localhost:8080/api/auth/set-password \
 - ✅ Verificação segura de senhas null
 
 ### 📊 Dados de Teste
-- **Cliente**: `cliente@exemplo.com` / `123456` (Saldo: R$ 1.000,00)
 - **Master**: `master@exemplo.com` / `123456`
+- **João Silva**: `joao@exemplo.com` / `123456` (Saldo: Variável)
+- **Maria Santos**: `maria@exemplo.com` / `123456` (Saldo: Variável)
+- **Pedro Oliveira**: `pedro@exemplo.com` / `123456` (Saldo: Variável)
+- **Ana Costa**: `ana@exemplo.com` / `123456` (Saldo: Variável)
 
 ### 🔧 Comandos de Migrations e Seeders
 
@@ -384,6 +421,8 @@ docker-compose exec backend php bin/hyperf.php db:seed
 # Criar novo seeder
 docker-compose exec backend php bin/hyperf.php gen:seeder NomeSeeder
 ```
+
+> **Importante**: O seed `TestDataSeeder` limpa completamente o banco antes de criar novos dados de teste. Use com cuidado em produção!
 
 ## 📁 Estrutura do Projeto
 

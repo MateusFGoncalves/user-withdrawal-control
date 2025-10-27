@@ -129,6 +129,19 @@ const Login: React.FC = () => {
 
           <div className="mt-6">
             <Separator />
+            
+            {/* Credenciais de Teste */}
+            <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">Credenciais de Teste:</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div><strong className="text-foreground">👑 Master:</strong> master@exemplo.com / 123456</div>
+                <div><strong className="text-foreground">👤 Cliente 1:</strong> joao@exemplo.com / 123456</div>
+                <div><strong className="text-foreground">👤 Cliente 2:</strong> maria@exemplo.com / 123456</div>
+                <div><strong className="text-foreground">👤 Cliente 3:</strong> pedro@exemplo.com / 123456</div>
+                <div><strong className="text-foreground">👤 Cliente 4:</strong> ana@exemplo.com / 123456</div>
+              </div>
+            </div>
+            
             <div className="text-center text-sm text-muted-foreground mt-4">
               Não tem uma conta?{' '}
               <a 
