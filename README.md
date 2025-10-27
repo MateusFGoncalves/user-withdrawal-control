@@ -243,7 +243,7 @@ Cada cliente possui:
 
 Importe a collection completa do Postman para testar todos os endpoints:
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/your-collection-link)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://gold-satellite-530941.postman.co/workspace/My-Workspace~09612edb-5522-42b0-870b-7ee865b0b262/collection/8696026-6028196a-e662-41dd-8f04-807d2743556d?action=share&source=copy-link&creator=8696026)
 
 ### 🔐 Autenticação
 ```http
