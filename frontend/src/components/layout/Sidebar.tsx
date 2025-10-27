@@ -12,7 +12,8 @@ import {
   ArrowDownLeft,
   History,
   Users,
-  BarChart3
+  BarChart3,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -58,12 +59,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       <div className="p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           {isOpen ? (
-            <h2 className="text-xl font-semibold text-foreground">
-              User Control
-            </h2>
+            <div className="flex items-center gap-2">
+              <Wallet className="h-6 w-6 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">
+                User Control
+              </h2>
+            </div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary-foreground">UC</span>
+            <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center">
+              <Wallet className="h-6 w-6 text-primary" />
             </div>
           )}
         </div>
@@ -77,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           <Button
             key={item.label}
             variant={location.pathname === item.href ? "default" : "ghost"}
-            className={`w-full justify-start ${
-              isOpen ? 'px-3' : 'px-1'
+            className={`w-full  ${
+              isOpen ? 'px-3 justify-start' : 'px-1 justify-center'
             }`}
             onClick={() => handleNavigation(item.href)}
           >
