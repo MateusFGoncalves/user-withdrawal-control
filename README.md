@@ -138,12 +138,53 @@ Crie um arquivo `.env` na raiz do projeto (opcional, as configurações padrão 
 
 ```env
 # Backend
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
+APP_NAME=UserWithdrawalControl
+APP_ENV=local
+APP_DEBUG=true
+
+DB_DRIVER=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=user_withdrawal
+DB_USERNAME=app_user
 DB_PASSWORD=app_password
+DB_CHARSET=utf8mb4
+DB_COLLATION=utf8mb4_unicode_ci
+DB_PREFIX=
+
+REDIS_HOST=redis
+REDIS_AUTH=(null)
+REDIS_PORT=6379
+REDIS_DB=0
+
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION=3600
+
+CORS_ALLOW_ORIGIN=*
+CORS_ALLOW_HEADERS=*
+CORS_ALLOW_METHODS=*
+
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=******@gmail.com
+MAIL_PASSWORD=*****
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=******@gmail.com
+MAIL_FROM_NAME=UserControl
 
 # Frontend
 REACT_APP_API_URL=http://localhost/api
 ```
+
+> **📧 Configuração de E-mail:** 
+> 
+> Para usar o sistema de envio de emails:
+> 1. Configure uma conta Gmail e ative a verificação em 2 etapas
+> 2. Gere uma senha de app: https://myaccount.google.com/apppasswords
+> 3. Preencha as variáveis `MAIL_USERNAME`, `MAIL_PASSWORD` e `MAIL_FROM_ADDRESS`
+> 4. Veja a seção **[📧 Configuração de E-mail](#-configuração-de-e-mail)** abaixo para mais detalhes
 
 ### 3. Inicie os serviços
 ```bash
@@ -717,6 +758,7 @@ MAIL_FROM_NAME=User Control
    - Acesse: https://myaccount.google.com/apppasswords
    - Selecione "Mail" e "Other" (Desktop)
    - Gere a senha e use no campo `MAIL_PASSWORD`
+   - A senha gerada pelo google deve ser usada aqui sem espaços. (ex: google gerou "eyzpdr wsgeu tilwe", use "eyzpdrwsgeutilwe") 
 
 ### 📬 Templates de Email
 
