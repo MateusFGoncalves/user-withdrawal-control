@@ -154,6 +154,9 @@ docker-compose up -d
 ```bash
 # Instalar pacotes npm necessários (react-hot-toast, date-fns, etc)
 docker-compose exec frontend npm install
+
+# Reiniciar o frontend para aplicar as mudanças
+docker-compose restart frontend && echo "✅ Frontend reiniciado"
 ```
 
 ### 5. Execute o script de configuração
@@ -162,13 +165,7 @@ docker-compose exec frontend npm install
 ./setup.sh
 ```
 
-### 6. Execute o seed de dados de teste
-```bash
-# Criar dados de teste (1 master + 4 clientes com transações)
-docker-compose exec backend php bin/hyperf.php db:seed
-```
-
-### 7. Acesse a aplicação
+### 6. Acesse a aplicação
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:9501
 - **MySQL**: localhost:3306
