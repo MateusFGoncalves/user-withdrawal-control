@@ -36,42 +36,6 @@ O projeto segue uma arquitetura de microsserviços containerizada com Docker, in
 - **MySQL**: Banco de dados principal
 - **Redis**: Cache e filas
 
-## 📸 Screenshots do Sistema
-
-### 🔐 Página de Login
-![Login](images/login.png)
-
-### 👤 Acesso CLIENTE
-
-#### 1. Dashboard e Saldo
-![Dashboard Cliente 1](images/client/01.png)
-
-#### 2. Realizar Depósito
-![Depósito](images/client/02.png)
-
-#### 3. Realizar Saque
-![Saque](images/client/03.png)
-
-#### 4. Visualizar Extrato
-![Extrato](images/client/04.png)
-
-#### 5. Transações Recentes
-![Transações](images/client/05.png)
-
-### 👑 Acesso MASTER
-
-#### 1. Dashboard Administrativo
-![Dashboard Master 1](images/master/01.png)
-
-#### 2. Gestão de Clientes
-![Clientes Master 2](images/master/02.png)
-
-#### 3. Listagem de Transações
-![Transações Master 3](images/master/03.png)
-
-#### 4. Estatísticas Globais
-![Estatísticas Master 4](images/master/04.png)
-
 ## 📋 Funcionalidades
 
 ### 🔐 Módulo de Autenticação
