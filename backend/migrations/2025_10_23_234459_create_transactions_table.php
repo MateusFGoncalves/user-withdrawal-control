@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('account_id')->constrained('accounts')->onDelete('cascade');
             $table->enum('type', ['DEPOSITO', 'SAQUE']);
             $table->decimal('amount', 15, 2);
-            $table->enum('status', ['PENDENTE', 'PROCESSADO', 'FALHOU'])->default('PENDENTE');
+            $table->enum('status', ['PENDENTE', 'PROCESSADO', 'FALHOU', 'CANCELADO'])->default('PENDENTE');
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('processed_at')->nullable();
             $table->text('failure_reason')->nullable();
