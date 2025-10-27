@@ -335,9 +335,10 @@ curl -X POST http://localhost:8080/api/auth/set-password \
 - ✅ Limite máximo de 7 dias
 - ✅ Valor NÃO é debitado no agendamento
 - ✅ Transação marcada como PENDENTE
-- ✅ Processamento via CRON (futuro)
+- ✅ Processamento automático via CRON (diariamente às 6:00 AM)
 - ✅ Cancelamento permitido até processamento
 - ✅ Status CANCELADO quando cancelado pelo usuário
+- ✅ Status FALHOU quando saldo insuficiente no processamento
 
 #### **Validações Gerais**
 - ✅ Saldo nunca pode ser negativo
@@ -562,6 +563,8 @@ user-withdrawal-control/
 - **Depósitos imediatos** com validação
 - **Saques imediatos** com validação de saldo
 - **Saques agendados** (até 7 dias)
+- **Processamento automático de saques** via CRON
+- **Notificações por email** automáticas
 - **Cancelamento de saques agendados** com confirmação
 - **Extrato completo** com filtros e paginação
 - **Exportação Excel** com PhpSpreadsheet
@@ -647,8 +650,55 @@ MAIL_FROM_NAME=User Control
 - ✅ O envio de email não bloqueia o fluxo de saque
 - ✅ Erros no envio são logados mas não afetam a operação
 
+## ⏰ Sistema de CRON para Processamento Automático
+
+O sistema possui um **CRON Job** configurado que executa automaticamente todos os dias às **6:00 da manhã** para processar saques agendados pendentes.
+
+### 🔧 Configuração
+
+O CRON é configurado automaticamente durante o build do Docker e está localizado em:
+- **Crontab**: `backend/crontab`
+- **Comando**: `withdrawals:process-scheduled`
+- **Horário**: Todo dia às 6:00 AM
+
+### 📋 O que o CRON faz
+
+1. **Busca saques agendados**: Procura por transações com status `PENDENTE` e data `scheduled_at` para hoje ou anterior
+2. **Verifica saldo**: Confirma se há saldo suficiente na conta
+3. **Processa o saque**: Debita o valor da conta
+4. **Atualiza status**: Marca como `PROCESSADO` ou `FALHOU` (se saldo insuficiente)
+5. **Envia email**: Notifica o cliente sobre o processamento
+
+### 🛠️ Comandos Úteis
+
+```bash
+# Executar manualmente (para testes)
+docker-compose exec backend php bin/hyperf.php withdrawals:process-scheduled
+
+# Ver logs do cron
+docker-compose exec backend cat /opt/www/runtime/logs/cron.log
+
+# Verificar configuração do cron
+docker-compose exec backend crontab -l
+
+# Ver logs do Hyperf (com logs do cron)
+docker-compose logs backend | grep -i cron
+```
+
+### ⚠️ Comportamento em Caso de Falha
+
+- **Saldo insuficiente**: Saque marcado como `FALHOU` com motivo registrado
+- **Erro no envio de email**: Processamento continua normalmente, erro é logado
+- **Erro de conexão DB**: Todas as operações são revertidas (transação)
+
+### 📊 Status de Processamento
+
+O comando fornece feedback detalhado:
+- Total de saques encontrados
+- Status de cada processamento (✅ Sucesso / ❌ Falha)
+- Resumo final com estatísticas
+
 ## 📋 Próximas Funcionalidades
-- **CRON Job** para processar saques agendados automaticamente
 - **Relatórios financeiros** detalhados e exportação
 - **Auditoria** de operações e logs de sistema
 - **API de webhooks** para integrações externas
@@ -897,6 +947,8 @@ Para suporte, abra uma issue no repositório ou entre em contato através do ema
 - ✅ **Gerenciamento de contas digitais** com saldo em tempo real
 - ✅ **Depósitos e saques** via PIX com validações robustas
 - ✅ **Saques agendados** para até 7 dias no futuro
+- ✅ **Processamento automático de saques** via CRON (todos os dias às 6:00 AM)
+- ✅ **Notificações por email** automáticas para transações
 - ✅ **Cancelamento de saques agendados** com confirmação
 - ✅ **Extrato completo** com histórico de transações e paginação
 - ✅ **Exportação Excel** com PhpSpreadsheet

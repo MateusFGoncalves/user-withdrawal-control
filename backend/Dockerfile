@@ -36,6 +36,8 @@ RUN set -ex \
     # - config timezone
     && ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
     && echo "${TIMEZONE}" > /etc/timezone \
+    # - install crontab
+    && apk add --no-cache dcron \
     # ---------- clear works ----------
     && rm -rf /var/cache/apk/* /tmp/* /usr/share/man \
     && echo -e "\033[42;37m Build Completed :).\033[0m\n"
@@ -46,9 +48,20 @@ WORKDIR /opt/www
 # COPY ./composer.* /opt/www/
 # RUN composer install --no-dev --no-scripts
 
+# Copiar arquivos de configuração do cron primeiro
+COPY ./crontab /etc/cron.d/hyperf-cron
+COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# Copiar o resto dos arquivos
 COPY . /opt/www
-RUN composer install --no-dev -o && php bin/hyperf.php
+
+# Instalar dependências e configurar
+RUN composer install --no-dev -o && php bin/hyperf.php \
+    && chmod 0644 /etc/cron.d/hyperf-cron \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && crontab /etc/cron.d/hyperf-cron \
+    && mkdir -p /opt/www/runtime/logs
 
 EXPOSE 9501
 
-ENTRYPOINT ["php", "/opt/www/bin/hyperf.php", "start"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

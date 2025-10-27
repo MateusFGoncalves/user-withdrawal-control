@@ -1,0 +1,3 @@
+# Executar processamento de saques agendados todos os dias às 6:00 AM
+0 6 * * * cd /opt/www && php bin/hyperf.php withdrawals:process-scheduled >> /opt/www/runtime/logs/cron.log 2>&1
+

@@ -3,3 +3,5 @@
 !bin/
 !config/
 !composer.*
+!crontab
+!docker-entrypoint.sh
