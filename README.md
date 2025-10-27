@@ -164,7 +164,7 @@ Cada cliente possui:
 
 ### 🗄️ Diagrama ER do Banco de Dados
 
-![Diagrama ER](docs/diagram.png)
+![Diagrama ER](images/diagram.png)
 
 ### 🏦 Estrutura do Banco de Dados
 
