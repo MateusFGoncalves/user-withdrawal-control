@@ -150,19 +150,25 @@ REACT_APP_API_URL=http://localhost/api
 docker-compose up -d
 ```
 
-### 4. Execute o script de configuração
+### 4. Instale as dependências do frontend
+```bash
+# Instalar pacotes npm necessários (react-hot-toast, date-fns, etc)
+docker-compose exec frontend npm install
+```
+
+### 5. Execute o script de configuração
 ```bash
 # Script automatizado que executa migrations e seeders
 ./setup.sh
 ```
 
-### 5. Execute o seed de dados de teste
+### 6. Execute o seed de dados de teste
 ```bash
 # Criar dados de teste (1 master + 4 clientes com transações)
 docker-compose exec backend php bin/hyperf.php db:seed
 ```
 
-### 6. Acesse a aplicação
+### 7. Acesse a aplicação
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:9501
 - **MySQL**: localhost:3306
@@ -801,9 +807,14 @@ php bin/hyperf.php start
 
 ### Frontend (React)
 ```bash
-cd frontend
+# Instalar dependências
 npm install
+
+# Iniciar ambiente de desenvolvimento
 npm start
+
+# OU via Docker
+docker-compose exec frontend npm install
 ```
 
 ## 🐳 Docker
