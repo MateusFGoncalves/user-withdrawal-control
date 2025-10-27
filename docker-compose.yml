@@ -38,6 +38,8 @@ services:
       - "9501:9501"
     volumes:
       - ./backend:/opt/www
+    env_file:
+      - ./backend/.env
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306

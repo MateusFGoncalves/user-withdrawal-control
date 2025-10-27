@@ -599,15 +599,61 @@ user-withdrawal-control/
 - **Paginação robusta** com navegação por páginas
 - **Interface consistente** alinhada com outros módulos
 
-### 📋 Próximas Funcionalidades
+### 📧 Configuração de E-mail
+
+O sistema envia emails de notificação automaticamente quando um saque é realizado ou agendado.
+
+### ⚙️ Configuração SMTP
+
+Adicione as seguintes variáveis ao arquivo `.env` do backend:
+
+```env
+# Email Configuration
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=seu-email@gmail.com
+MAIL_PASSWORD=sua-senha-app
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=seu-email@gmail.com
+MAIL_FROM_NAME=User Control
+```
+
+### 🔧 Configuração para Gmail
+
+1. **Ative a verificação em 2 etapas** na sua conta Google
+2. **Gere uma senha de app**:
+   - Acesse: https://myaccount.google.com/apppasswords
+   - Selecione "Mail" e "Other" (Desktop)
+   - Gere a senha e use no campo `MAIL_PASSWORD`
+
+### 📬 Templates de Email
+
+#### **Saque Imediato**
+- Assunto: "Saque efetuado com sucesso - User Control"
+- Conteúdo: Valor, chave PIX, tipo PIX e data/hora da operação
+- Status: PROCESSADO
+
+#### **Saque Agendado**
+- Assunto: "Saque agendado com sucesso - User Control"
+- Conteúdo: Valor, chave PIX, tipo PIX e data/hora agendada
+- Status: PENDENTE
+
+### 🔒 Segurança
+
+- ✅ Use senha de app do Gmail (não sua senha pessoal)
+- ✅ Não compartilhe credenciais SMTP
+- ✅ Mantenha o arquivo `.env` seguro e fora do controle de versão
+- ✅ O envio de email não bloqueia o fluxo de saque
+- ✅ Erros no envio são logados mas não afetam a operação
+
+## 📋 Próximas Funcionalidades
 - **CRON Job** para processar saques agendados automaticamente
-- **Notificações por email** para confirmações de transações
 - **Relatórios financeiros** detalhados e exportação
 - **Auditoria** de operações e logs de sistema
 - **API de webhooks** para integrações externas
 - **Relatórios de performance** e métricas
 - **Gestão de contas** pelo administrador
-- **Histórico global de transações** com filtros avançados
 
 ## 🔧 Desenvolvimento
 

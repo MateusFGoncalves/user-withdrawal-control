@@ -14,6 +14,7 @@ use App\Model\WithdrawalDetails;
 use App\Request\CancelScheduledWithdrawalRequest;
 use App\Request\DepositRequest;
 use App\Request\WithdrawRequest;
+use App\Service\EmailService;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Validation\ValidationException;
@@ -138,6 +139,17 @@ class TransactionController extends AbstractController
             // Se for saque imediato, debitar o saldo
             if (!$isScheduled) {
                 $account->subtractBalance($amount);
+            }
+
+            // Enviar email de confirmação
+            try {
+                $emailService = new EmailService();
+                $scheduledAtFormatted = $isScheduled ? $scheduledDate->format('Y-m-d H:i:s') : null;
+                // Enviar email para o email do usuário (mesmo que a chave PIX seja diferente)
+                $emailService->sendWithdrawalConfirmation($user->email, $amount, $pixKey, $pixType, $scheduledAtFormatted);
+            } catch (\Exception $e) {
+                // Log do erro, mas não interrompe o fluxo
+                error_log("Erro ao enviar email de confirmação: " . $e->getMessage());
             }
 
             return $response->json([
